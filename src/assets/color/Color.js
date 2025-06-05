@@ -16,5 +16,6 @@ export const Color = {
     text: '#FFFFFF',
     black: '#000000',
     white: '#FFFFFF',
-    blue: '#00f'
+    blue: '#00f',
+    gray: '#0E0E0E'
 }

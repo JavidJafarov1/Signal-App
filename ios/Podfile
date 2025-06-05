@@ -39,6 +39,9 @@ target 'Signal' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
+  pod 'GoogleMaps'
+pod 'Google-Maps-iOS-Utils' 
+
   target 'SignalTests' do
     inherit! :complete
     # Pods for testing

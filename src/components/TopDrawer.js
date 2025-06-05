@@ -8,9 +8,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Feather from 'react-native-vector-icons/Feather';
-import { Color } from '../assets/colors/Color';
+import { Color } from '../assets/color/Color';
 import { scale, verticalScale } from 'react-native-size-matters';
 import { useNavigation } from '@react-navigation/native';
+import ScreenWrapper from './ScreenWrapper';
 
 const { height } = Dimensions.get('window');
 
@@ -47,41 +48,41 @@ const TopDrawer = ({ visible, onClose }) => {
         <>
             {visible && <Pressable style={styles.backdrop} onPress={onClose} />}
             <Animated.View style={[styles.drawer, animatedStyle]}>
-                <SafeAreaView style={styles.safeArea}>
-                    <View style={styles.header}>
-                        <Pressable onPress={onClose} style={styles.iconButton} accessibilityLabel="Close drawer">
-                            <Feather name="x" size={24} color="#FFF" />
-                        </Pressable>
-                        <Pressable style={styles.iconButton} accessibilityLabel="User profile" onPress={() => navigation.navigate('ProfileScreen')}>
-                            <Feather name="user" size={24} color="#FFF" />
-                        </Pressable>
-                    </View>
 
-                    <View style={{ paddingHorizontal: scale(16), paddingTop: verticalScale(50) }}>
+                <View style={styles.header}>
+                    <Pressable onPress={onClose} style={styles.iconButton} accessibilityLabel="Close drawer">
+                        <Feather name="x" size={24} color="#FFF" />
+                    </Pressable>
+                    <Pressable style={styles.iconButton} accessibilityLabel="User profile" onPress={() => navigation.navigate('ProfileScreen')}>
+                        <Feather name="user" size={24} color="#FFF" />
+                    </Pressable>
+                </View>
 
-                        <FlatList
-                            data={menuItems}
-                            keyExtractor={(item) => item.id.toString()}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity
-                                    style={styles.menuItem}
-                                    onPress={() => handleMenuPress(item.onPress)}
-                                >
-                                    <Text style={styles.menuText}>{item.title}</Text>
-                                </TouchableOpacity>
-                            )}
-                        />
-                        <View style={styles.socialContainer}>
-                            {['sc', 'vk', 'tg'].map((platform, index) => (
-                                <Pressable key={index} >
-                                    <Text style={styles.socialText}>
-                                        {platform.toUpperCase()}
-                                    </Text>
-                                </Pressable>
-                            ))}
-                        </View>
+                <View style={{ paddingHorizontal: scale(16), paddingTop: verticalScale(30) }}>
+
+                    <FlatList
+                        data={menuItems}
+                        keyExtractor={(item) => item.id.toString()}
+                        renderItem={({ item }) => (
+                            <TouchableOpacity
+                                style={styles.menuItem}
+                                onPress={() => handleMenuPress(item.onPress)}
+                            >
+                                <Text style={styles.menuText}>{item.title}</Text>
+                            </TouchableOpacity>
+                        )}
+                    />
+                    <View style={styles.socialContainer}>
+                        {['sc', 'vk', 'tg'].map((platform, index) => (
+                            <Pressable key={index} >
+                                <Text style={styles.socialText}>
+                                    {platform.toUpperCase()}
+                                </Text>
+                            </Pressable>
+                        ))}
                     </View>
-                </SafeAreaView>
+                </View>
+
             </Animated.View>
         </>
     );
@@ -111,16 +112,12 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingHorizontal: scale(15),
-        paddingVertical: verticalScale(20),
+        paddingHorizontal: scale(16),
+        paddingVertical: verticalScale(20)
     },
     iconButton: {
         padding: 12,
         backgroundColor: '#0E0E0E',
-    },
-    menuContainer: {
-        paddingHorizontal: scale(25),
-        paddingTop: verticalScale(50),
     },
     menuItem: {
         paddingVertical: verticalScale(10),

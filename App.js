@@ -11,9 +11,7 @@ import i18n from './src/i18Next/i18n'
 const App = () => {
   return (
     <View style={{ flex: 1, backgroundColor: 'black', height: '100%', width: '100%' }}>
-
       <I18nextProvider i18n={i18n}>
-
         <Provider store={store}>
           <ThemeProvider>
             <NavigationContainer>

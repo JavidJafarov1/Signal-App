@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Appearance } from 'react-native';
-import { DarkTheme, LightTheme } from '../assets/colors/Color';
+import { DarkTheme, LightTheme } from '../assets/color/Color';
 
 const ThemeContext = createContext();
 

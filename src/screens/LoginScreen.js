@@ -1,160 +1,196 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, CheckBox, Linking } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import {
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    StyleSheet,
+    SafeAreaView,
+    Linking,
+    Pressable,
+} from 'react-native';
+import ScreenWrapper from '../components/ScreenWrapper';
+import { useNavigation } from '@react-navigation/native';
+import Feather from 'react-native-vector-icons/Feather';
+import { Color } from '../assets/color/Color';
+import { scale, verticalScale } from 'react-native-size-matters';
+import { useDispatch } from 'react-redux';
+import { setAuthToken } from '../store/reducer/authReducer';
+import CustomImagePicker from '../components/ImagePicker';
+import MapComponent from '../components/Maps';
 
-const LoginScreen = () => {
+export default function AuthScreen() {
     const [isRegister, setIsRegister] = useState(true);
     const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [agree, setAgree] = useState(false);
 
+    const navigation = useNavigation()
+    const dispatch = useDispatch()
+
+
     return (
-        <View style={styles.container}>
-            {/* Back Icon */}
-            <TouchableOpacity style={styles.backIcon}>
-                <Icon name="chevron-back" size={28} color="#fff" />
-            </TouchableOpacity>
+        <ScreenWrapper>
 
-            {/* Heading */}
-            <Text style={styles.heading}>ВОЙТИ</Text>
-            <Text style={styles.subHeading}>Войдите в приложение, чтобы получить доступ ко всем функциям</Text>
+            {/* <MapComponent latitude={28.6139} longitude={77.2090} /> */}
+            <View style={{ flex: 1 }}>
+                <Pressable style={styles.iconButton} onPress={() => navigation.goBack()}>
+                    <Feather name="chevron-left" size={20} color={Color.white} />
+                </Pressable>
+                <Text style={[styles.textStyle, { fontSize: scale(28), fontWeight: '600', marginBottom: verticalScale(10) }]}>ВОЙТИ</Text>
+                <Text style={styles.textStyle}>
+                    Войдите в приложение, чтобы получить доступ ко всем функциям
+                </Text>
 
-            {/* Tabs */}
-            <View style={styles.tabContainer}>
-                <TouchableOpacity
-                    style={[styles.tabButton, isRegister && styles.activeTab]}
-                    onPress={() => setIsRegister(true)}
-                >
-                    <Text style={[styles.tabText, isRegister && styles.activeTabText]}>Регистрация</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.tabButton, !isRegister && styles.activeTab]}
-                    onPress={() => setIsRegister(false)}
-                >
-                    <Text style={[styles.tabText, !isRegister && styles.activeTabText]}>Вход</Text>
-                </TouchableOpacity>
-            </View>
+                <View style={styles.tabContainer}>
+                    <TouchableOpacity
+                        style={[styles.tab, isRegister && styles.activeTab]}
+                        onPress={() => setIsRegister(true)}
+                    >
+                        <Text style={[styles.textStyle, isRegister && styles.activeTabText]}>Регистрация</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.tab, !isRegister && styles.activeTab]}
+                        onPress={() => setIsRegister(false)}
+                    >
+                        <Text style={[styles.textStyle, !isRegister && styles.activeTabText]}>Вход</Text>
+                    </TouchableOpacity>
+                </View>
 
-            {/* Email Input */}
-            <Text style={styles.inputLabel}>Введите e-mail</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="example@mail.com"
-                placeholderTextColor="#aaa"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-            />
-            <Text style={styles.infoText}>Данные для входа в приложение будут отправлены на указанный e-mail.</Text>
+                <View style={{ flex: 1 }}>
 
-            {/* Checkbox */}
-            <View style={styles.checkboxContainer}>
-                <CheckBox
-                    value={agree}
-                    onValueChange={setAgree}
-                    tintColors={{ true: '#fff', false: '#fff' }}
-                />
-                <Text style={styles.checkboxLabel}>
-                    Соглашаюсь с{' '}
-                    <Text style={styles.linkText} onPress={() => Linking.openURL('https://example.com/privacy')}>
-                        политикой конфиденциальности
+                    <Text style={styles.textStyle}>Введите e-mail</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder=""
+                        placeholderTextColor="#999"
+                        value={email}
+                        onChangeText={setEmail}
+                    />
+
+
+                    {!isRegister && (
+                        <>
+                            <Pressable onPress={() => alert('Password reset')} style={{ alignSelf: 'flex-end' }} >
+                                <Text style={[styles.textStyle, { fontSize: scale(14) }]}>Забыли пароль?</Text>
+                            </Pressable>
+                            <View style={styles.passwordRow}>
+                                <Text style={styles.textStyle}>Введите пароль</Text>
+                            </View>
+                            <TextInput
+                                style={styles.input}
+                                placeholder=""
+                                placeholderTextColor="#999"
+                                secureTextEntry
+                                value={password}
+                                onChangeText={setPassword}
+                            />
+                        </>
+                    )}
+
+                    {isRegister && (
+                        <>
+                            <Text style={styles.textStyle}>Данные для входа в приложение будут отправлены на указанный e-mail.</Text>
+                            <TouchableOpacity
+                                style={styles.checkboxContainer}
+                                onPress={() => setAgree(!agree)}
+                            >
+                                <View style={[styles.checkbox, agree && styles.checked]}>
+                                    {agree && <Text style={[styles.textStyle, { color: Color.black }]}>✓</Text>}
+                                </View>
+                                <Text style={styles.policyText}>
+                                    Соглашаюсь с{' '}
+                                    <Text
+                                        style={styles.link}
+                                        onPress={() => Linking.openURL('https://your-privacy-policy.com')}
+                                    >
+                                        политикой конфиденциальности
+                                    </Text>
+                                </Text>
+                            </TouchableOpacity>
+                        </>
+                    )}
+                </View>
+
+                <TouchableOpacity style={styles.button} onPress={() => dispatch(setAuthToken('asd'))}>
+                    <Text style={styles.textStyle}>
+                        {isRegister ? 'Зарегистрироваться' : 'Войти'}
                     </Text>
-                </Text>
+                </TouchableOpacity>
             </View>
-
-            {/* Register Button */}
-            <TouchableOpacity style={styles.primaryButton}>
-                <Text style={styles.primaryButtonText}>
-                    {isRegister ? 'Зарегистрироваться' : 'Войти'}
-                </Text>
-            </TouchableOpacity>
-        </View>
+        </ScreenWrapper>
     );
-};
-
-export default LoginScreen;
+}
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#000',
-        padding: 24,
-        paddingTop: 60,
-    },
-    backIcon: {
-        marginBottom: 20,
-    },
-    heading: {
-        fontSize: 32,
-        color: '#fff',
-        fontWeight: '600',
-        marginBottom: 10,
-    },
-    subHeading: {
-        fontSize: 16,
-        color: '#fff',
-        marginBottom: 20,
-    },
     tabContainer: {
         flexDirection: 'row',
-        marginBottom: 20,
-        borderRadius: 6,
-        overflow: 'hidden',
+        marginVertical: verticalScale(30),
     },
-    tabButton: {
+    tab: {
         flex: 1,
-        paddingVertical: 12,
-        backgroundColor: '#1a1a1a',
+        paddingVertical: verticalScale(15),
+        backgroundColor: Color.gray,
         alignItems: 'center',
     },
     activeTab: {
-        backgroundColor: '#1a1a1a',
-    },
-    tabText: {
-        color: '#fff',
-        fontSize: 16,
+        backgroundColor: Color.blue,
     },
     activeTabText: {
-        color: '#00f',
+        fontWeight: 'bold',
     },
-    inputLabel: {
-        fontSize: 16,
-        color: '#fff',
-        marginBottom: 8,
+    textStyle: {
+        color: Color.text,
+        fontSize: scale(16)
     },
     input: {
         borderBottomWidth: 1,
         borderBottomColor: '#555',
-        color: '#fff',
-        fontSize: 16,
-        marginBottom: 12,
+        marginBottom: verticalScale(20),
+        color: Color.text,
+        paddingVertical: 5,
     },
-    infoText: {
-        color: '#ccc',
-        fontSize: 14,
-        marginBottom: 20,
+    passwordRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
     },
     checkboxContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 24,
+        marginTop: verticalScale(20),
     },
-    checkboxLabel: {
-        color: '#fff',
-        marginLeft: 10,
-        flexShrink: 1,
-    },
-    linkText: {
-        textDecorationLine: 'underline',
-        color: '#fff',
-    },
-    primaryButton: {
-        backgroundColor: '#001bff',
-        paddingVertical: 14,
-        borderRadius: 6,
+    checkbox: {
+        width: scale(20),
+        height: scale(20),
+        borderWidth: 1,
+        borderColor: '#aaa',
+        marginRight: scale(10),
+        justifyContent: 'center',
         alignItems: 'center',
     },
-    primaryButtonText: {
-        color: '#fff',
-        fontSize: 18,
+    checked: {
+        backgroundColor: Color.white,
+    },
+    policyText: {
+        color: Color.text,
+        flex: 1,
+        flexWrap: 'wrap',
+    },
+    link: {
+        textDecorationLine: 'underline',
+        color: Color.text,
+    },
+    button: {
+        backgroundColor: Color.blue,
+        alignItems: 'center',
+        paddingVertical: verticalScale(15),
+        marginBottom: verticalScale(20)
+    },
+    iconButton: {
+        padding: scale(12),
+        backgroundColor: Color.gray,
+        alignSelf: 'flex-start',
+        marginVertical: verticalScale(20),
+        marginBottom: verticalScale(50)
     },
 });

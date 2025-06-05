@@ -1,53 +1,50 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, StatusBar, Pressable } from 'react-native';
-import { Color } from '../assets/colors/Color';
+import { Color } from '../assets/color/Color';
 import { scale, verticalScale } from 'react-native-size-matters';
 import { useNavigation } from '@react-navigation/native';
+import { setAuthToken } from '../store/reducer/authReducer';
+import { useDispatch } from 'react-redux';
+import ScreenWrapper from '../components/ScreenWrapper';
+import SoundPlayer from '../components/Sound';
 
 const WelcomeScreen = () => {
     const navigation = useNavigation()
+    const dispatch = useDispatch()
     return (
-        <View style={styles.container}>
-            <StatusBar backgroundColor={Color.backgroundColor} />
+        <ScreenWrapper>
+            <View style={{ flex: 1 }}>
+                <View style={{ flex: 1, paddingTop: verticalScale(80) }}>
+                    <Text style={styles.title}>SIGNAL</Text>
 
-            <View style={{ flex: 1, paddingTop: verticalScale(80) }}>
-                <Text style={styles.title}>SIGNAL</Text>
-
-                <View style={styles.dateLocationContainer}>
-                    <Text style={styles.textStyle}>15—19 August</Text>
-                    <Text style={styles.textStyle}>Nikola-Lenivets</Text>
+                    <View style={styles.dateLocationContainer}>
+                        <Text style={styles.textStyle}>15—19 August</Text>
+                        <Text style={styles.textStyle}>Nikola-Lenivets</Text>
+                    </View>
+                    <Text style={styles.description}>
+                        Экосистема c годовым жизненным циклом, Signal Festival проводит восьмой сезон в крупнейшем арт-парке Никола-Ленивец
+                    </Text>
                 </View>
-                <Text style={styles.description}>
-                    Экосистема c годовым жизненным циклом, Signal Festival проводит восьмой сезон в крупнейшем арт-парке Никола-Ленивец
-                </Text>
+
+                <View style={{ paddingBottom: verticalScale(20) }}>
+
+                    <Pressable style={styles.loginButton} onPress={() => navigation.navigate('LoginScreen')}>
+                        <Text style={styles.loginButtonText}>Войти</Text>
+                    </Pressable>
+
+                    <Pressable onPress={() => { navigation.navigate('ProfileScreen') }}>
+                        <Text style={styles.guestText}>Продолжить как гость</Text>
+                    </Pressable>
+                </View>
+
             </View>
-
-            <View style={{ paddingBottom: verticalScale(20) }}>
-
-                <Pressable style={styles.loginButton} onPress={() => { navigation.navigate('LoginScreen') }}>
-                    <Text style={styles.loginButtonText}>Войти</Text>
-                </Pressable>
-
-                <Pressable onPress={() => { navigation.navigate('ProfileScreen') }}>
-                    <Text style={styles.guestText}>Продолжить как гость</Text>
-                </Pressable>
-            </View>
-
-
-
-
-        </View>
+        </ScreenWrapper>
     );
 };
 
 export default WelcomeScreen;
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Color.backgroundColor,
-        padding: scale(16),
-    },
     title: {
         fontSize: scale(70),
         color: Color.text,

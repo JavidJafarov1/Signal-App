@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Feather from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 import TopDrawer from './TopDrawer';
-import { Color } from '../assets/colors/Color';
+import { Color } from '../assets/color/Color';
 import { scale, verticalScale } from 'react-native-size-matters';
 
 const Header = ({ singleIcon = false }) => {
@@ -18,6 +18,14 @@ const Header = ({ singleIcon = false }) => {
         setDrawerVisible(false);
     };
 
+    const handleBack = () => {
+        if (navigation.canGoBack()) {
+            navigation.goBack();
+        } else {
+            console.log('back does nothing');
+        }
+    };
+
     return (
         <>
             <View style={styles.container}>
@@ -27,8 +35,8 @@ const Header = ({ singleIcon = false }) => {
                     </Pressable>
 
                     {!singleIcon && (
-                        <Pressable style={styles.iconButton} onPress={() => navigation.goBack()}>
-                            <Feather name="chevron-left" size={20} color={Color.white} />
+                        <Pressable style={styles.iconButton} onPress={handleBack}>
+                            <Feather name="chevron-left" size={20} color="white" />
                         </Pressable>
                     )}
                 </View>
@@ -50,9 +58,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: scale(15),
         paddingVertical: verticalScale(20),
-        backgroundColor: Color.backgroundColor,
+        backgroundColor: 'transparent',
     },
     leftIcons: {
         flexDirection: 'row',

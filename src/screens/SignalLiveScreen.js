@@ -5,8 +5,9 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import EvilIcons from 'react-native-vector-icons/EvilIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Header from '../components/Header';
-import { Color } from '../assets/colors/Color';
+import { Color } from '../assets/color/Color';
 import { scale, verticalScale } from 'react-native-size-matters';
+import ScreenWrapper from '../components/ScreenWrapper';
 
 const socialLinks = [
     { name: 'SoundCloud', icon: <Entypo name="soundcloud" size={26} color={Color.white} />, url: 'https://soundcloud.com' },
@@ -17,26 +18,24 @@ const socialLinks = [
 
 const SignalLiveScreen = () => {
     return (
-        <SafeAreaView style={styles.container}>
+        <ScreenWrapper >
             <Header />
 
-            <View style={{ paddingHorizontal: scale(16) }}>
 
-                <Text style={styles.title}>SIGNAL LIVE</Text>
-                <Text style={styles.subtitle}>Следите за нами в соцсетях:</Text>
+            <Text style={styles.title}>SIGNAL LIVE</Text>
+            <Text style={styles.subtitle}>Следите за нами в соцсетях:</Text>
 
-                {socialLinks.map((item, index) => (
-                    <TouchableOpacity
-                        key={index}
-                        style={styles.linkRow}
-                        onPress={() => Linking.openURL(item.url)}
-                    >
-                        {item.icon}
-                        <Text style={styles.linkText}>{item.name}</Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
-        </SafeAreaView>
+            {socialLinks.map((item, index) => (
+                <TouchableOpacity
+                    key={index}
+                    style={styles.linkRow}
+                    onPress={() => Linking.openURL(item.url)}
+                >
+                    {item.icon}
+                    <Text style={styles.linkText}>{item.name}</Text>
+                </TouchableOpacity>
+            ))}
+        </ScreenWrapper>
     );
 };
 
@@ -51,11 +50,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginVertical: 20,
-    },
-    iconBox: {
-        backgroundColor: '#222',
-        padding: 10,
-        borderRadius: 6,
     },
     title: {
         color: Color.text,

@@ -2,16 +2,17 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Pressable } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { Color } from '../assets/colors/Color';
+import { Color } from '../assets/color/Color';
 import { scale, verticalScale } from 'react-native-size-matters';
 import Header from '../components/Header';
+import ScreenWrapper from '../components/ScreenWrapper';
 
 const ProfileScreen = () => {
     return (
-        <SafeAreaView style={styles.container}>
+        <ScreenWrapper >
 
             <Header />
-            <View style={{ paddingHorizontal: scale(16), flex: 1 }}>
+            <View style={{ flex: 1 }}>
                 <View style={styles.profileContainer}>
                     <View style={styles.profileIcon}>
                         <Text style={styles.textStyle}>?</Text>
@@ -31,17 +32,14 @@ const ProfileScreen = () => {
             <Pressable style={styles.loginButton}>
                 <Text style={styles.textStyle}>Вход/Регистрация</Text>
             </Pressable>
-        </SafeAreaView>
+        </ScreenWrapper>
     );
 };
 
 export default ProfileScreen;
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Color.backgroundColor,
-    },
+
     profileContainer: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -69,6 +67,5 @@ const styles = StyleSheet.create({
         paddingVertical: verticalScale(15),
         alignItems: 'center',
         marginBottom: verticalScale(20),
-        marginHorizontal: scale(16)
     },
 });

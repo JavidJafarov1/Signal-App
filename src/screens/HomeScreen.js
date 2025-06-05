@@ -5,14 +5,15 @@ import Header from '../components/Header';
 import Config from '../config/config'
 import i18n from '../i18Next/i18n'
 import { Translation, useTranslation } from 'react-i18next'
-import CustomImage from '../components/customImage'
+import CustomImage from '../components/ImageComponent'
 import AnimatedHamburger from '../components/MenuButton';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { setAuthToken } from '../store/reducer/authReducer';
-import { Color } from '../assets/colors/Color';
+import { Color } from '../assets/color/Color';
 import BackgroundImageWrapper from '../components/BackgroundImageWrapper';
 import { scale } from 'react-native-size-matters';
+import ScreenWrapper from '../components/ScreenWrapper';
 
 const images = [
     { id: "0", backgroundImage: "https://picsum.photos/id/1/200/300", image: "https://picsum.photos/id/1/200/300", text: 'abcd', city: 'rodnya', music: 'Nervmusic', date: 'nth, 16 apr. 04:00 - 07:00' },
@@ -35,11 +36,12 @@ const HomeScreen = () => {
     }
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: Color.backgroundColor }}>
+        <ScreenWrapper >
             <Header singleIcon={false} />
 
             <View style={styles.content}>
                 <FlatList
+                    showsVerticalScrollIndicator={false}
                     data={images}
                     renderItem={({ item }) => (
                         <Pressable onPress={() => hadleDetailsScreenNavigate(item)}>
@@ -58,7 +60,7 @@ const HomeScreen = () => {
             </View>
 
             <Button title='Logout' onPress={() => dispatch(setAuthToken(''))} />
-        </SafeAreaView>
+        </ScreenWrapper>
     )
 }
 
@@ -67,7 +69,6 @@ export default HomeScreen
 const styles = StyleSheet.create({
     content: {
         flex: 1,
-        padding: scale(10),
         zIndex: -1
     },
     list: {

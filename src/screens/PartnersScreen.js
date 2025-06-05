@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'rea
 import Icon from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Header from '../components/Header';
+import ScreenWrapper from '../components/ScreenWrapper';
 
 const items = [
     { name: 'Билайн', icon: 'numeric-6-circle-outline' },
@@ -15,13 +16,11 @@ const items = [
 
 const PartnersScreen = () => {
     return (
-        <View style={styles.container}>
-            {/* Header */}
+        <ScreenWrapper >
             <Header />
 
             <Text style={styles.partnerText}>Генеральный партнер АО "TБанк"</Text>
 
-            {/* Brand Items */}
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 {items.map((item, index) => (
                     <View key={index} style={styles.itemCard}>
@@ -30,7 +29,7 @@ const PartnersScreen = () => {
                     </View>
                 ))}
             </ScrollView>
-        </View>
+        </ScreenWrapper>
     );
 };
 
@@ -41,25 +40,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#000',
         paddingTop: 40,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 15,
-    },
-    iconButton: {
-        padding: 8,
-    },
-    logoContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    logoBox: {
-        backgroundColor: '#FFD700',
-        padding: 10,
-        borderTopLeftRadius: 10,
-        borderBottomLeftRadius: 10,
     },
     bankText: {
         fontSize: 22,
@@ -74,7 +54,6 @@ const styles = StyleSheet.create({
         marginVertical: 10,
     },
     scrollContent: {
-        paddingHorizontal: 15,
         paddingBottom: 30,
     },
     itemCard: {

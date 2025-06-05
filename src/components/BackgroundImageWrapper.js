@@ -14,7 +14,7 @@ import Animated, {
     withTiming,
 
 } from 'react-native-reanimated';
-import { Color } from '../assets/colors/Color';
+import { Color } from '../assets/color/Color';
 
 const AnimatedFastImage = Animated.createAnimatedComponent(FastImage);
 

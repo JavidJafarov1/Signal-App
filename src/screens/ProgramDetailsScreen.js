@@ -2,20 +2,21 @@ import { ImageBackground, SafeAreaView, StyleSheet, Text, View } from 'react-nat
 import React, { useState } from 'react'
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Header from '../components/Header';
-import { Color } from '../assets/colors/Color';
-import CustomImage from '../components/customImage';
+import { Color } from '../assets/color/Color';
+import CustomImage from '../components/ImageComponent';
 import { scale, verticalScale } from 'react-native-size-matters';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import ScreenWrapper from '../components/ScreenWrapper';
 
 const ProgramDetailsScreen = () => {
     const route = useRoute();
     const data = route?.params?.item
 
     return (
-        <SafeAreaView style={{ backgroundColor: Color.backgroundColor, flex: 1 }}>
+        <ScreenWrapper>
             <Header />
 
-            <View style={{ paddingHorizontal: scale(16), paddingTop: verticalScale(20) }}>
+            <View style={{ paddingTop: verticalScale(20) }}>
 
                 <Text style={styles.textStyle}>{data?.text}</Text>
 
@@ -24,7 +25,7 @@ const ProgramDetailsScreen = () => {
                 </Text>
             </View>
 
-        </SafeAreaView>
+        </ScreenWrapper>
     )
 }
 

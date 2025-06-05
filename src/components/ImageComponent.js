@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View, ImageBackground, Image, Dimensions, } from 'react-native'
 import React from 'react'
-import { Color } from '../assets/colors/Color';
+import { Color } from '../assets/color/Color';
 import { scale, verticalScale } from 'react-native-size-matters';
 
 const screenWidth = Dimensions.get("window").width;
