@@ -1,10 +1,10 @@
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Dimensions, SafeAreaView, Button } from 'react-native';
-import { Color } from '../assets/color/Color';
+import { Color } from '../../assets/color/Color';
 import { scale } from 'react-native-size-matters';
-import Header from '../components/Header';
-import ScreenWrapper from '../components/ScreenWrapper';
-import CustomModal from '../components/Modal';
+import Header from '../../components/Header';
+import ScreenWrapper from '../../components/ScreenWrapper';
+import CustomModal from '../../components/Modal';
 
 const { width: screenWidth } = Dimensions.get('window');
 

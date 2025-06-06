@@ -1,11 +1,11 @@
 import { FlatList, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native'
 import React from 'react'
-import { Color } from '../assets/color/Color';
-import Header from '../components/Header';
-import CustomImage from '../components/ImageComponent';
+import { Color } from '../../assets/color/Color';
+import Header from '../../components/Header';
+import CustomImage from '../../components/ImageComponent';
 import { useNavigation } from '@react-navigation/native';
 import { scale } from 'react-native-size-matters';
-import ScreenWrapper from '../components/ScreenWrapper';
+import ScreenWrapper from '../../components/ScreenWrapper';
 
 const images = [
     { id: "0", backgroundImage: "https://picsum.photos/id/1/200/300", image: "https://picsum.photos/id/1/200/300", text: 'abcd', paragraph: 'A paragraph is a group of sentences that work together to develop a single idea or point. It typically includes a topic sentence, supporting sentences that elaborate on the topic, and a concluding sentence. For example, a paragraph about the benefits of reading might start with a topic sentence stating that reading expands knowledge, then provide supporting details about the different types of information gained through books, and finally conclude with a sentence summarizing the importance of reading for intellectual growth' },

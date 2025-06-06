@@ -1,12 +1,12 @@
 import { ImageBackground, SafeAreaView, StyleSheet, Text, View } from 'react-native'
 import React, { useState } from 'react'
 import { useNavigation, useRoute } from '@react-navigation/native';
-import Header from '../components/Header';
-import { Color } from '../assets/color/Color';
-import CustomImage from '../components/ImageComponent';
+import Header from '../../components/Header';
+import { Color } from '../../assets/color/Color';
+import CustomImage from '../../components/ImageComponent';
 import { scale, verticalScale } from 'react-native-size-matters';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import ScreenWrapper from '../components/ScreenWrapper';
+import ScreenWrapper from '../../components/ScreenWrapper';
 
 const ProgramDetailsScreen = () => {
     const route = useRoute();

@@ -2,14 +2,16 @@ import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 import { Color } from '../assets/color/Color'
 import { scale } from 'react-native-size-matters'
+import useAppHooks from '../auth/useAppHooks'
 
 const TextComponent = () => {
+    const {t} = useAppHooks()
     return (
         <View>
             <View style={styles.textContainer}>
-                <Text style={styles.title}>Вход в Signal Live</Text>
+                <Text style={styles.title}>{t('Login_to_Signal_Live')}</Text>
                 <Text style={styles.subtitle}>
-                    Войдите в приложение, чтобы получить доступ ко всем функциям
+                    {t('Log_in_to_the_app_to_access_all_features')}
                 </Text>
             </View>
         </View>

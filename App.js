@@ -6,7 +6,7 @@ import { Provider } from 'react-redux'
 import { store } from './src/store/store'
 import { ThemeProvider } from './src/auth/themeContext'
 import { I18nextProvider } from 'react-i18next'
-import i18n from './src/i18Next/i18n'
+import i18n from './src/locales/i18n'
 
 const App = () => {
   return (

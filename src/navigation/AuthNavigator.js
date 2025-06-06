@@ -1,8 +1,9 @@
 import React from 'react'
-import LoginScreen from '../screens/AuthScreen/LoginScreen'
-import WelcomeScreen from '../screens/AuthScreen/WelcomeScreen'
-import RegistrationScreen from '../screens/AuthScreen/RegistrationScreen'
+import WelcomeScreen from '../screens/AuthScreens/WelcomeScreen'
+import RegistrationScreen from '../screens/AuthScreens/RegistrationScreen'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import EmailConfirmationScreen from '../screens/AuthScreens/EmailConfirmationScreen'
+import PasswordConfirmationScreen from '../screens/AuthScreens/PasswordConfirmationScreen'
 
 const Stack = createNativeStackNavigator()
 
@@ -12,7 +13,8 @@ export const AuthStack = () => {
             headerShown: false,
         }}>
             <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
-            <Stack.Screen name="LoginScreen" component={LoginScreen} />
+            <Stack.Screen name="EmailConfirmationScreen" component={EmailConfirmationScreen} />
+            <Stack.Screen name="PasswordConfirmationScreen" component={PasswordConfirmationScreen} />
             <Stack.Screen name="RegistrationScreen" component={RegistrationScreen} />
         </Stack.Navigator>
     )

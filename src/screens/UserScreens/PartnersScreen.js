@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import Header from '../components/Header';
-import ScreenWrapper from '../components/ScreenWrapper';
+import Header from '../../components/Header';
+import ScreenWrapper from '../../components/ScreenWrapper';
 
 const items = [
     { name: 'Билайн', icon: 'numeric-6-circle-outline' },

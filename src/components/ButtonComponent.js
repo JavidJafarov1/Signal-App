@@ -5,11 +5,10 @@ import { Color } from '../assets/color/Color'
 import { scale } from 'react-native-size-matters'
 
 const ButtonComponent = ({ buttonText, buttonStyle, buttonTextStyle, onButtonPress }) => {
-    const navigation = useNavigation()
     return (
         <View>
-            <TouchableOpacity style={[styles.loginButton, buttonStyle]} onPress={onButtonPress}>
-                <Text style={[styles.loginText, buttonTextStyle]}>{buttonText}</Text>
+            <TouchableOpacity style={[styles.button, buttonStyle]} onPress={onButtonPress}>
+                <Text style={[styles.text, buttonTextStyle]}>{buttonText}</Text>
             </TouchableOpacity>
         </View>
     )
@@ -18,13 +17,13 @@ const ButtonComponent = ({ buttonText, buttonStyle, buttonTextStyle, onButtonPre
 export default ButtonComponent
 
 const styles = StyleSheet.create({
-    loginButton: {
+    button: {
         backgroundColor: Color.gray,
-        height: scale(50),
+        height: scale(46),
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
     },
-    loginText: {
+    text: {
         color: Color.text,
         fontWeight: '600',
         fontSize: scale(16),

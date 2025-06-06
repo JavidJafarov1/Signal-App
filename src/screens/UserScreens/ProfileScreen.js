@@ -2,10 +2,10 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Pressable } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { Color } from '../assets/color/Color';
+import { Color } from '../../assets/color/Color';
 import { scale, verticalScale } from 'react-native-size-matters';
-import Header from '../components/Header';
-import ScreenWrapper from '../components/ScreenWrapper';
+import Header from '../../components/Header';
+import ScreenWrapper from '../../components/ScreenWrapper';
 
 const ProfileScreen = () => {
     return (

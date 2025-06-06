@@ -4,10 +4,10 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import EvilIcons from 'react-native-vector-icons/EvilIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
-import Header from '../components/Header';
-import { Color } from '../assets/color/Color';
+import Header from '../../components/Header';
+import { Color } from '../../assets/color/Color';
 import { scale, verticalScale } from 'react-native-size-matters';
-import ScreenWrapper from '../components/ScreenWrapper';
+import ScreenWrapper from '../../components/ScreenWrapper';
 
 const socialLinks = [
     { name: 'SoundCloud', icon: <Entypo name="soundcloud" size={26} color={Color.white} />, url: 'https://soundcloud.com' },
