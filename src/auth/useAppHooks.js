@@ -1,15 +1,19 @@
-import { useNavigation } from '@react-navigation/native';
-import { useTranslation } from 'react-i18next';
+import {useNavigation, useRoute} from '@react-navigation/native';
+import {useTranslation} from 'react-i18next';
+import {useDispatch, useSelector} from 'react-redux';
 
 const useAppHooks = () => {
-    const navigation = useNavigation();
-    const { t, i18n } = useTranslation();
+  const navigation = useNavigation();
+  const route = useRoute();
+  const {t} = useTranslation();
+  const dispatch = useDispatch();
 
-    return {
-        navigation,
-        t,
-        i18n
-    };
+  return {
+    navigation,
+    route,
+    t,
+    dispatch,
+  };
 };
 
 export default useAppHooks;

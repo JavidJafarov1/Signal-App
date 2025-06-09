@@ -1,77 +1,98 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking, SafeAreaView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Linking,
+  SafeAreaView,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import EvilIcons from 'react-native-vector-icons/EvilIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Header from '../../components/Header';
-import { Color } from '../../assets/color/Color';
-import { scale, verticalScale } from 'react-native-size-matters';
+import {Color} from '../../assets/color/Color';
+import {scale, verticalScale} from 'react-native-size-matters';
 import ScreenWrapper from '../../components/ScreenWrapper';
 
 const socialLinks = [
-    { name: 'SoundCloud', icon: <Entypo name="soundcloud" size={26} color={Color.white} />, url: 'https://soundcloud.com' },
-    { name: 'Youtube', icon: <Entypo name="youtube" size={26} color={Color.white} />, url: 'https://youtube.com' },
-    { name: 'telegram', icon: <EvilIcons name="sc-telegram" size={26} color={Color.white} />, url: 'https://telegram.org' },
-    { name: 'Вконтакте', icon: <Entypo name="vk" size={26} color={Color.white} />, url: 'https://vk.com' },
+  {
+    name: 'SoundCloud',
+    icon: <Entypo name="soundcloud" size={26} color={Color.white} />,
+    url: 'https://soundcloud.com',
+  },
+  {
+    name: 'Youtube',
+    icon: <Entypo name="youtube" size={26} color={Color.white} />,
+    url: 'https://youtube.com',
+  },
+  {
+    name: 'telegram',
+    icon: <EvilIcons name="sc-telegram" size={26} color={Color.white} />,
+    url: 'https://telegram.org',
+  },
+  {
+    name: 'Вконтакте',
+    icon: <Entypo name="vk" size={26} color={Color.white} />,
+    url: 'https://vk.com',
+  },
 ];
 
 const SignalLiveScreen = () => {
-    return (
-        <ScreenWrapper >
-            <Header />
+  return (
+    <ScreenWrapper>
+      <Header />
 
+      <Text style={styles.title}>SIGNAL LIVE</Text>
+      <Text style={styles.subtitle}>Следите за нами в соцсетях:</Text>
 
-            <Text style={styles.title}>SIGNAL LIVE</Text>
-            <Text style={styles.subtitle}>Следите за нами в соцсетях:</Text>
-
-            {socialLinks.map((item, index) => (
-                <TouchableOpacity
-                    key={index}
-                    style={styles.linkRow}
-                    onPress={() => Linking.openURL(item.url)}
-                >
-                    {item.icon}
-                    <Text style={styles.linkText}>{item.name}</Text>
-                </TouchableOpacity>
-            ))}
-        </ScreenWrapper>
-    );
+      {socialLinks.map((item, index) => (
+        <TouchableOpacity
+          key={index}
+          style={styles.linkRow}
+          onPress={() => Linking.openURL(item.url)}>
+          {item.icon}
+          <Text style={styles.linkText}>{item.name}</Text>
+        </TouchableOpacity>
+      ))}
+    </ScreenWrapper>
+  );
 };
 
 export default SignalLiveScreen;
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Color.backgroundColor,
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginVertical: 20,
-    },
-    title: {
-        color: Color.text,
-        fontSize: scale(28),
-        marginTop: verticalScale(20),
-    },
-    subtitle: {
-        color: '#CCC',
-        fontSize: scale(16),
-        marginBottom: verticalScale(30),
-    },
-    linkRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: verticalScale(25),
-        borderBottomWidth: 0.5,
-        borderBottomColor: '#444',
-        paddingBottom: verticalScale(10),
-    },
-    linkText: {
-        color: '#fff',
-        fontSize: scale(18),
-        marginLeft: scale(15),
-    },
+  container: {
+    flex: 1,
+    backgroundColor: Color.backgroundColor,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 20,
+  },
+  title: {
+    color: Color.text,
+    fontSize: scale(28),
+    marginTop: verticalScale(20),
+  },
+  subtitle: {
+    color: '#CCC',
+    fontSize: scale(16),
+    marginBottom: verticalScale(30),
+  },
+  linkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: verticalScale(25),
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#444',
+    paddingBottom: verticalScale(10),
+  },
+  linkText: {
+    color: '#fff',
+    fontSize: scale(18),
+    marginLeft: scale(15),
+  },
 });

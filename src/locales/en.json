@@ -21,5 +21,20 @@
     "Map": "Map",
     "Chat": "Chat",
     "Signal_People": "Signal People",
-    "Partners": "Partners"
+    "Partners": "Partners",
+    "Email_is_required": "Email is required",
+    "Please_enter_a_valid_email_address": "Please enter a valid email address",
+    "Password_is_required": "Password is required",
+    "Please_enter_a_valid_password": "Please enter a valid password",
+    "Verifying": "Verifying...",
+    "First_name_is_required": "First name is required",
+    "Last_name_is_required": "Last name is required",
+    "Phone_number_is_required": "Phone number is required",
+    "Confirm_password_is_required": "Confirm password is required",
+    "Please_agree_to_the_privacy_policy": "Please agree to the privacy policy",
+    "Passwords_do_not_match": "Passwords do not match",
+    "Invalid_phone_number": "Invalid phone number",
+    "Invalid_email_format": "Invalid email format",
+    "Invalid_password": "Invalid password",
+    "Select_country_code": "Select country code"
 }

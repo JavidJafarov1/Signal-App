@@ -1,143 +1,91 @@
-import React, { useState } from 'react';
-
-import { View, Image, StyleSheet, Text } from 'react-native';
-
+import React, {useState} from 'react';
+import {View, Image, StyleSheet, Text} from 'react-native';
 import FastImage from 'react-native-fast-image';
-import Feather from 'react-native-vector-icons/Feather'
+import Feather from 'react-native-vector-icons/Feather';
 
 import Animated, {
-
-    useSharedValue,
-
-    useAnimatedStyle,
-
-    withTiming,
-
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
 } from 'react-native-reanimated';
-import { Color } from '../assets/color/Color';
+import {Color} from '../assets/color/Color';
 
 const AnimatedFastImage = Animated.createAnimatedComponent(FastImage);
 
-const BackgroundImageWrapper = ({ uri, children }) => {
+const BackgroundImageWrapper = ({uri, children}) => {
+  const [loaded, setLoaded] = useState(false);
 
-    const [loaded, setLoaded] = useState(false);
+  const opacity = useSharedValue(0);
 
-    const opacity = useSharedValue(0);
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: withTiming(opacity.value, {duration: 500}),
+  }));
 
-    const animatedStyle = useAnimatedStyle(() => ({
+  const handleLoad = () => {
+    setLoaded(true);
+    opacity.value = 1;
+  };
 
-        opacity: withTiming(opacity.value, { duration: 500 }),
+  return (
+    <View style={styles.container}>
+      <AnimatedFastImage
+        source={uri}
+        style={[StyleSheet.absoluteFillObject, animatedStyle]}
+        onLoad={handleLoad}
+        resizeMode={FastImage.resizeMode.cover}
+      />
 
-    }));
-
-    const handleLoad = () => {
-
-        setLoaded(true);
-
-        opacity.value = 1;
-
-    };
-
-    return (
-        <View style={styles.container}>
-
-            {/* Background Image */}
-            <AnimatedFastImage
-
-                source={uri}
-
-                style={[StyleSheet.absoluteFillObject, animatedStyle]}
-
-                onLoad={handleLoad}
-
-                resizeMode={FastImage.resizeMode.cover}
-
-            />
-
-            {/* Placeholder before image loads */}
-
-            {!loaded && (
-                <View style={styles.placeholderWrapper}>
-                    {/* <Image
-
-                        source={require('../assets/instagram.png')}
-
-                        style={styles.placeholder}
-
-                        resizeMode="contain"
-
-                    /> */}
-                    <Feather name="image" size={22} color={Color.white} />
-                </View>
-
-            )}
-
-            {/* Foreground content shown after image starts appearing */}
-
-            {loaded && (
-                <View style={styles.content}>
-
-                    {children}
-                </View>
-
-            )}
+      {!loaded && (
+        <View style={styles.placeholderWrapper}>
+          <Feather name="image" size={22} color={Color.white} />
         </View>
+      )}
 
-    );
-
+      {loaded && <View style={styles.content}>{children}</View>}
+    </View>
+  );
 };
 
 export default BackgroundImageWrapper;
 
 const styles = StyleSheet.create({
+  container: {
+    width: '100%',
 
-    container: {
+    height: 400,
 
-        width: '100%',
+    position: 'relative',
 
-        height: 400,
+    overflow: 'hidden',
 
-        position: 'relative',
+    justifyContent: 'center',
 
-        overflow: 'hidden',
+    alignItems: 'center',
+  },
 
-        justifyContent: 'center',
+  placeholderWrapper: {
+    ...StyleSheet.absoluteFillObject,
 
-        alignItems: 'center',
+    justifyContent: 'center',
 
-    },
+    alignItems: 'center',
 
-    placeholderWrapper: {
+    backgroundColor: '#FFF',
+  },
 
-        ...StyleSheet.absoluteFillObject,
+  placeholder: {
+    height: 100,
 
-        justifyContent: 'center',
+    width: 100,
+  },
 
-        alignItems: 'center',
+  content: {
+    position: 'absolute',
 
-        backgroundColor: '#FFF',
+    zIndex: 1,
 
-    },
+    justifyContent: 'center',
 
-    placeholder: {
-
-        height: 100,
-
-        width: 100,
-
-    },
-
-    content: {
-
-        position: 'absolute',
-
-        zIndex: 1,
-
-        justifyContent: 'center',
-
-        alignItems: 'center',
-
-    },
-
+    alignItems: 'center',
+  },
 });
-
