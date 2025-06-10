@@ -6,13 +6,17 @@ import UpperImage from '../../components/UpperImage';
 import ButtonComponent from '../../components/ButtonComponent';
 import TextComponent from '../../components/TextComponent';
 import useAppHooks from '../../auth/useAppHooks';
+import {verticalScale} from 'react-native-size-matters';
 
 const WelcomeScreen = () => {
   const {navigation, t} = useAppHooks();
 
   return (
     <ScreenWrapper>
-      <UpperImage logo={true} />
+      <View style={{marginTop: verticalScale(20)}}>
+        <UpperImage logo={true} />
+      </View>
+
       <View style={{flex: 1, justifyContent: 'center'}}>
         <TextComponent />
         <View style={{gap: 12}}>

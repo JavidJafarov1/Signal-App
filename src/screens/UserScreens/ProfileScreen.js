@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
-  Pressable,
-} from 'react-native';
+import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {Color} from '../../assets/color/Color';
@@ -41,9 +34,9 @@ const ProfileScreen = () => {
           или зарегистрироваться
         </Text>
       </View>
-      <Pressable style={styles.loginButton}>
+      <TouchableOpacity style={styles.loginButton}>
         <Text style={styles.textStyle}>Вход/Регистрация</Text>
-      </Pressable>
+      </TouchableOpacity>
     </ScreenWrapper>
   );
 };

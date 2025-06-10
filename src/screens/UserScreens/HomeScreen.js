@@ -1,25 +1,14 @@
 import {
   Button,
   FlatList,
-  Pressable,
-  SafeAreaView,
   StyleSheet,
-  Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import React, {useState} from 'react';
-import TopDrawer from '../../components/TopDrawer';
 import Header from '../../components/Header';
-import i18n from '../../locales/i18n';
-import {Translation, useTranslation} from 'react-i18next';
 import CustomImage from '../../components/ImageComponent';
-import AnimatedHamburger from '../../components/MenuButton';
-import {useNavigation} from '@react-navigation/native';
-import {useDispatch, useSelector} from 'react-redux';
 import {setAuthToken} from '../../store/reducer/authReducer';
-import {Color} from '../../assets/color/Color';
-import BackgroundImageWrapper from '../../components/BackgroundImageWrapper';
-import {scale} from 'react-native-size-matters';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import useAppHooks from '../../auth/useAppHooks';
 
@@ -127,14 +116,14 @@ const HomeScreen = () => {
           showsVerticalScrollIndicator={false}
           data={images}
           renderItem={({item}) => (
-            <Pressable onPress={() => hadleDetailsScreenNavigate(item)}>
+            <TouchableOpacity onPress={() => hadleDetailsScreenNavigate(item)}>
               <CustomImage
                 backgroundImage={{uri: item?.backgroundImage}}
                 image={{uri: item?.image}}
                 text={item?.text}
                 fullSize={false}
               />
-            </Pressable>
+            </TouchableOpacity>
           )}
           keyExtractor={item => item.id}
           numColumns={2}

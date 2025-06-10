@@ -1,14 +1,15 @@
-import {StyleSheet, Text, View, Alert, ActivityIndicator} from 'react-native';
-import React, {useState} from 'react';
+import {StyleSheet, Text, View, Alert, TouchableOpacity} from 'react-native';
+import React, {useEffect, useState} from 'react';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import {OtpInput} from 'react-native-otp-entry';
 import {Color} from '../../assets/color/Color';
 import UpperImage from '../../components/UpperImage';
 import ButtonComponent from '../../components/ButtonComponent';
 import useAppHooks from '../../auth/useAppHooks';
-import {verticalScale} from 'react-native-size-matters';
-import {OTPVerification} from '../../utils/Apis/AuthApi';
+import {scale, verticalScale} from 'react-native-size-matters';
+import {OTPVerification, ResendOTPVerification} from '../../utils/Apis/AuthApi';
 import {setAuthToken} from '../../store/reducer/authReducer';
+import LoadingOverlay from '../../components/Loader';
 
 const OTPVerificationScreen = () => {
   const {navigation, t, dispatch, route} = useAppHooks();
@@ -17,12 +18,18 @@ const OTPVerificationScreen = () => {
   const [loading, setLoading] = useState(false);
   const email = route?.params?.email;
 
+  useEffect(() => {
+    Alert.alert(
+      'Success',
+      'Check your mail, we have sent you a verification code.',
+    );
+  }, []);
+
   const handleRegister = async () => {
     if (otp.length !== 6) {
       Alert.alert('Error', 'Please enter the complete OTP');
       return;
     }
-
     setLoading(true);
 
     try {
@@ -32,7 +39,6 @@ const OTPVerificationScreen = () => {
       };
 
       const response = await OTPVerification(data);
-
       if (
         response?.message === 'OTP verified successfully' ||
         response?.success === true
@@ -42,36 +48,48 @@ const OTPVerificationScreen = () => {
         Alert.alert('Error', 'OTP verification failed');
       }
     } catch (error) {
-      console.error('OTP Verification Error:', error);
       Alert.alert(
         'Error',
-        error?.response?.data?.error ||
-          error?.message ||
-          'Something went wrong',
+        error?.response?.data?.error || 'Something went wrong',
       );
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: Color.backgroundColor,
-        }}>
-        <ActivityIndicator size="large" color={Color.white} />
-      </View>
-    );
-  }
+  const handleResendOTP = async () => {
+    setLoading(true);
+
+    try {
+      const response = await ResendOTPVerification(email);
+      console.log('response', response);
+      if (
+        response?.message === 'OTP resent successfully' ||
+        response?.success === true
+      ) {
+        Alert.alert('Success', response?.message);
+      } else {
+        Alert.alert('Error', 'OTP verification failed');
+      }
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        error?.response?.data?.error || 'Something went wrong',
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <ScreenWrapper>
-      <UpperImage logo={true} back={true} />
-      <View style={{flex: 1, justifyContent: 'center'}}>
+      <View style={{marginTop: verticalScale(20)}}>
+        <UpperImage logo={true} />
+        <UpperImage back={true} />
+      </View>
+
+      <Text style={styles.title}>{t('Enter_your_OTP')}</Text>
+      <View style={{flex: 1}}>
         <OtpInput
           numberOfDigits={6}
           focusColor={Color.white}
@@ -96,26 +114,27 @@ const OTPVerificationScreen = () => {
             allowFontScaling: false,
           }}
           theme={{
-            containerStyle: styles.container,
-            pinCodeContainerStyle: styles.pinCodeContainer,
-            pinCodeTextStyle: styles.pinCodeText,
-            focusStickStyle: styles.focusStick,
-            focusedPinCodeContainerStyle: styles.activePinCodeContainer,
-            placeholderTextStyle: styles.placeholderText,
-            filledPinCodeContainerStyle: styles.filledPinCodeContainer,
-            disabledPinCodeContainerStyle: styles.disabledPinCodeContainer,
+            containerStyle: {marginVertical: verticalScale(20)},
+            pinCodeTextStyle: {color: Color.text},
+            focusedPinCodeContainerStyle: {backgroundColor: Color.gray},
           }}
         />
 
-        {loading && <Text style={styles.loadingText}>Verifying OTP...</Text>}
+        <TouchableOpacity onPress={handleResendOTP}>
+          <Text
+            style={[styles.title, {fontSize: scale(16), textAlign: 'center'}]}>
+            {t('Resend')}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <ButtonComponent
-        buttonText={loading ? t('Verifying') : t('Register')}
+        buttonText={t('Register')}
         buttonStyle={{bottom: verticalScale(20)}}
         onButtonPress={handleRegister}
-        disabled={loading}
       />
+
+      <LoadingOverlay visible={loading} text={t('Loading')} />
     </ScreenWrapper>
   );
 };
@@ -123,13 +142,10 @@ const OTPVerificationScreen = () => {
 export default OTPVerificationScreen;
 
 const styles = StyleSheet.create({
-  pinCodeText: {
+  title: {
     color: Color.text,
-  },
-  loadingText: {
-    color: Color.text,
-    textAlign: 'center',
-    marginTop: 10,
-    fontSize: 14,
+    fontSize: scale(24),
+    fontWeight: '600',
+    paddingVertical: verticalScale(10),
   },
 });

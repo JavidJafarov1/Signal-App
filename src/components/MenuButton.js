@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react';
-import {View, Pressable, StyleSheet} from 'react-native';
+import {View, StyleSheet, TouchableOpacity} from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -45,13 +45,13 @@ const AnimatedHamburger = ({isOpen, toggle}) => {
   }));
 
   return (
-    <Pressable onPress={toggle}>
+    <TouchableOpacity onPress={toggle}>
       <View style={styles.container}>
         <Animated.View style={[styles.line, topStyle]} />
         <Animated.View style={[styles.line, middleStyle]} />
         <Animated.View style={[styles.line, bottomStyle]} />
       </View>
-    </Pressable>
+    </TouchableOpacity>
   );
 };
 

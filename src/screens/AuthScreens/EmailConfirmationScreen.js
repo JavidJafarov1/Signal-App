@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {View, StyleSheet, Text, Alert, ActivityIndicator} from 'react-native';
+import {View, Text, Alert, ScrollView} from 'react-native';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import {Color} from '../../assets/color/Color';
 import UpperImage from '../../components/UpperImage';
@@ -10,6 +10,7 @@ import {scale, verticalScale} from 'react-native-size-matters';
 import {CheckUserExistOrNot} from '../../utils/Apis/AuthApi';
 import CustomTextInput from '../../components/Input';
 import {validateEmail} from '../../utils/helpers';
+import LoadingOverlay from '../../components/Loader';
 
 const EmailConfirmationScreen = () => {
   const {navigation, t} = useAppHooks();
@@ -44,30 +45,23 @@ const EmailConfirmationScreen = () => {
         ]);
       }
     } catch (error) {
-      console.error('Email configuration error:', error);
+      Alert.alert(
+        'Error',
+        error?.response?.data?.error || 'Something went wrong',
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: Color.backgroundColor,
-        }}>
-        <ActivityIndicator size="large" color={Color.white} />
-      </View>
-    );
-  }
-
   return (
     <ScreenWrapper>
-      <UpperImage logo={true} back={true} />
-      <View style={{flex: 1, justifyContent: 'center'}}>
+      <View style={{marginTop: verticalScale(20)}}>
+        <UpperImage logo={true} />
+        <UpperImage back={true} />
+      </View>
+
+      <ScrollView style={{flexGrow: 1}}>
         <TextComponent />
         <View style={{gap: 12}}>
           <CustomTextInput
@@ -89,7 +83,7 @@ const EmailConfirmationScreen = () => {
             onButtonPress={handleEmailConfiguration}
           />
         </View>
-      </View>
+      </ScrollView>
 
       <View
         style={{
@@ -105,6 +99,8 @@ const EmailConfirmationScreen = () => {
           <ButtonComponent buttonText={t('G')} />
         </View>
       </View>
+
+      <LoadingOverlay visible={loading} text={t('Loading')} />
     </ScreenWrapper>
   );
 };

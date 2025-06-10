@@ -1,4 +1,4 @@
-import {StyleSheet, View, Pressable} from 'react-native';
+import {StyleSheet, View, TouchableOpacity} from 'react-native';
 import React, {useState} from 'react';
 import Feather from 'react-native-vector-icons/Feather';
 import {useNavigation} from '@react-navigation/native';
@@ -30,22 +30,24 @@ const Header = ({singleIcon = false}) => {
     <>
       <View style={styles.container}>
         <View style={styles.leftIcons}>
-          <Pressable style={styles.iconButton} onPress={handleDrawerToggle}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={handleDrawerToggle}>
             <Feather name="menu" size={20} color={Color.white} />
-          </Pressable>
+          </TouchableOpacity>
 
           {!singleIcon && (
-            <Pressable style={styles.iconButton} onPress={handleBack}>
+            <TouchableOpacity style={styles.iconButton} onPress={handleBack}>
               <Feather name="chevron-left" size={20} color="white" />
-            </Pressable>
+            </TouchableOpacity>
           )}
         </View>
 
-        <Pressable
+        <TouchableOpacity
           style={styles.iconButton}
           onPress={() => navigation.navigate('ProfileScreen')}>
           <Feather name="user" size={20} color={Color.white} />
-        </Pressable>
+        </TouchableOpacity>
       </View>
 
       <TopDrawer visible={drawerVisible} onClose={handleDrawerClose} />
@@ -69,6 +71,6 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     padding: 12,
-    backgroundColor: '#0E0E0E',
+    backgroundColor: Color.gray,
   },
 });

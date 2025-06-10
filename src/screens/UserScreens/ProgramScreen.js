@@ -1,11 +1,4 @@
-import {
-  FlatList,
-  Pressable,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import {FlatList, StyleSheet, TouchableOpacity, View} from 'react-native';
 import React from 'react';
 import {Color} from '../../assets/color/Color';
 import Header from '../../components/Header';
@@ -111,14 +104,14 @@ const ProgramScreen = () => {
         <FlatList
           data={images}
           renderItem={({item}) => (
-            <Pressable onPress={() => hadleDetailsScreenNavigate(item)}>
+            <TouchableOpacity onPress={() => hadleDetailsScreenNavigate(item)}>
               <CustomImage
                 backgroundImage={{uri: item?.backgroundImage}}
                 image={{uri: item?.image}}
                 text={item?.text}
                 fullSize={false}
               />
-            </Pressable>
+            </TouchableOpacity>
           )}
           keyExtractor={item => item.id}
           numColumns={2}

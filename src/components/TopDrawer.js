@@ -3,7 +3,6 @@ import {
   View,
   StyleSheet,
   Dimensions,
-  Pressable,
   Text,
   FlatList,
   TouchableOpacity,
@@ -54,21 +53,23 @@ const TopDrawer = ({visible, onClose}) => {
 
   return (
     <>
-      {visible && <Pressable style={styles.backdrop} onPress={onClose} />}
+      {visible && (
+        <TouchableOpacity style={styles.backdrop} onPress={onClose} />
+      )}
       <Animated.View style={[styles.drawer, animatedStyle]}>
         <View style={styles.header}>
-          <Pressable
+          <TouchableOpacity
             onPress={onClose}
             style={styles.iconButton}
             accessibilityLabel="Close drawer">
             <Feather name="x" size={24} color="#FFF" />
-          </Pressable>
-          <Pressable
+          </TouchableOpacity>
+          <TouchableOpacity
             style={styles.iconButton}
             accessibilityLabel="User profile"
             onPress={() => navigation.navigate('ProfileScreen')}>
             <Feather name="user" size={24} color="#FFF" />
-          </Pressable>
+          </TouchableOpacity>
         </View>
 
         <View
@@ -86,9 +87,9 @@ const TopDrawer = ({visible, onClose}) => {
           />
           <View style={styles.socialContainer}>
             {['sc', 'vk', 'tg'].map((platform, index) => (
-              <Pressable key={index}>
+              <TouchableOpacity key={index}>
                 <Text style={styles.socialText}>{platform.toUpperCase()}</Text>
-              </Pressable>
+              </TouchableOpacity>
             ))}
           </View>
         </View>

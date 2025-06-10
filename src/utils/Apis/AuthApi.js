@@ -3,7 +3,7 @@ import {BASE_URL} from '../api';
 
 export const CheckUserExistOrNot = async data => {
   try {
-    const url = `${BASE_URL}/check-user`;
+    const url = `${BASE_URL}/api/check-user`;
     const body = {email: data};
 
     const response = await axios.post(url, body);
@@ -15,7 +15,7 @@ export const CheckUserExistOrNot = async data => {
 
 export const RegisterNewUser = async data => {
   try {
-    const url = `${BASE_URL}/auth/register`;
+    const url = `${BASE_URL}/api/auth/register`;
     const body = {
       firstName: data?.firstName,
       lastName: data?.lastName,
@@ -33,7 +33,7 @@ export const RegisterNewUser = async data => {
 
 export const Login = async data => {
   try {
-    const url = `${BASE_URL}/auth/login`;
+    const url = `${BASE_URL}/api/auth/login`;
     const body = {
       email: data?.email,
       password: data?.password,
@@ -48,10 +48,38 @@ export const Login = async data => {
 
 export const OTPVerification = async data => {
   try {
-    const url = `${BASE_URL}/auth/verify-otp`;
+    const url = `${BASE_URL}/api/auth/verify-otp`;
     const body = {
       email: data?.email,
       otp: data?.otp,
+    };
+
+    const response = await axios.post(url, body);
+    return response?.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const ResendOTPVerification = async data => {
+  try {
+    const url = `${BASE_URL}/api/auth/resend-otp`;
+    const body = {
+      email: data,
+    };
+
+    const response = await axios.post(url, body);
+    return response?.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const ResetPassword = async data => {
+  try {
+    const url = `${BASE_URL}/api/auth/forgot-password`;
+    const body = {
+      email: data,
     };
 
     const response = await axios.post(url, body);

@@ -36,5 +36,8 @@
     "Invalid_phone_number": "Неверный номер телефона",
     "Invalid_email_format": "Неверный формат электронной почты",
     "Invalid_password": "Неверный пароль",
-    "Select_country_code": "Выберите код страны"
+    "Select_country_code": "Выберите код страны",
+    "Resend": "Отправить повторно",
+    "Enter_your_OTP": "Введите свой одноразовый пароль",
+    "Loading": "Загрузка..."
 }

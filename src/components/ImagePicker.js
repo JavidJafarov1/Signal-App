@@ -3,7 +3,6 @@ import {
   View,
   Text,
   Modal,
-  Pressable,
   StyleSheet,
   Image,
   TouchableOpacity,
@@ -85,19 +84,19 @@ const CustomImagePicker = ({onImageSelected}) => {
         visible={modalVisible}
         animationType="slide"
         onRequestClose={() => setModalVisible(false)}>
-        <Pressable
+        <TouchableOpacity
           style={styles.modalOverlay}
           onPress={() => setModalVisible(false)}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Select Image From</Text>
-            <Pressable style={styles.modalButton} onPress={openGallery}>
+            <TouchableOpacity style={styles.modalButton} onPress={openGallery}>
               <Text style={styles.modalButtonText}>📁 Gallery</Text>
-            </Pressable>
-            <Pressable style={styles.modalButton} onPress={openCamera}>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalButton} onPress={openCamera}>
               <Text style={styles.modalButtonText}>📷 Camera</Text>
-            </Pressable>
+            </TouchableOpacity>
           </View>
-        </Pressable>
+        </TouchableOpacity>
       </Modal>
     </View>
   );

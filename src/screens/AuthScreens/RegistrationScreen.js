@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
-  ActivityIndicator,
   FlatList,
 } from 'react-native';
 import ScreenWrapper from '../../components/ScreenWrapper';
@@ -19,7 +18,9 @@ import CustomTextInput from '../../components/Input';
 import {RegisterNewUser} from '../../utils/Apis/AuthApi';
 import {validateEmail, validatePassword} from '../../utils/helpers';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import BottomSheet from '@gorhom/bottom-sheet';
+import BottomSheet, {BottomSheetFlatList} from '@gorhom/bottom-sheet';
+import LoadingOverlay from '../../components/Loader';
+import Entypo from 'react-native-vector-icons/Entypo';
 
 const countryCodes = [
   {code: '+1', country: 'US', flag: '🇺🇸'},
@@ -57,12 +58,12 @@ const RegistrationScreen = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState({});
   const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
+    firstName: 'asd',
+    lastName: 'asd',
+    email: 'asdwerf@gmail.com',
+    phone: '9452145263',
+    password: 'ad123wer',
+    confirmPassword: 'ad123wer',
   });
 
   const handleChange = (key, value) => {
@@ -72,10 +73,6 @@ const RegistrationScreen = () => {
 
   const handlePresentModalPress = useCallback(() => {
     bottomSheetRef.current?.expand();
-  }, []);
-
-  const handleClosePress = useCallback(() => {
-    bottomSheetRef.current?.close();
   }, []);
 
   const handleCountrySelect = useCallback(country => {
@@ -190,125 +187,106 @@ const RegistrationScreen = () => {
     [handleCountrySelect],
   );
 
-  if (loading) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: Color.backgroundColor,
-        }}>
-        <ActivityIndicator size="large" color={Color.white} />
-      </View>
-    );
-  }
-
   return (
     <ScreenWrapper>
-      <UpperImage back={true} />
-      <ScrollView style={{flexGrow: 1}}>
+      <View style={{marginTop: verticalScale(20)}}>
         <UpperImage logo={true} />
-        <View style={{marginTop: verticalScale(60)}}>
-          <Text style={styles.title}>{t('Registration')}</Text>
+        <UpperImage back={true} />
+      </View>
 
-          <View style={{gap: 12}}>
-            <CustomTextInput
-              placeholder={t('Name')}
-              value={form?.firstName}
-              onChangeText={text => handleChange('firstName', text)}
-            />
-            {error.firstName && (
-              <Text style={styles.error}>{error.firstName}</Text>
-            )}
+      <ScrollView style={{flexGrow: 1}}>
+        <Text style={styles.title}>{t('Registration')}</Text>
 
-            <CustomTextInput
-              placeholder={t('Last_name')}
-              value={form?.lastName}
-              onChangeText={text => handleChange('lastName', text)}
-            />
-            {error.lastName && (
-              <Text style={styles.error}>{error.lastName}</Text>
-            )}
+        <View style={{gap: 12}}>
+          <CustomTextInput
+            placeholder={t('Name')}
+            value={form?.firstName}
+            onChangeText={text => handleChange('firstName', text)}
+          />
+          {error.firstName && (
+            <Text style={styles.error}>{error.firstName}</Text>
+          )}
 
-            <CustomTextInput
-              placeholder={t('E-mail')}
-              value={form?.email}
-              onChangeText={text => handleChange('email', text)}
-              keyboardType="email-address"
-            />
-            {error.email && <Text style={styles.error}>{error.email}</Text>}
-            <View style={{flexDirection: 'row'}}>
-              <TouchableOpacity
-                style={styles.countryCodeSelector}
-                onPress={handlePresentModalPress}>
-                <Text style={styles.countryFlag}>
-                  {selectedCountryCode.flag}
-                </Text>
-                <Text style={styles.selectedCountryCode}>
-                  {selectedCountryCode.code}
-                </Text>
-                <Icon name="keyboard-arrow-down" size={20} color={Color.text} />
-              </TouchableOpacity>
+          <CustomTextInput
+            placeholder={t('Last_name')}
+            value={form?.lastName}
+            onChangeText={text => handleChange('lastName', text)}
+          />
+          {error.lastName && <Text style={styles.error}>{error.lastName}</Text>}
 
-              <CustomTextInput
-                placeholder={t('Phone_number')}
-                value={form?.phone}
-                onChangeText={text => handleChange('phone', text)}
-                keyboardType="phone-pad"
-                maxLength={10}
-              />
-            </View>
-            {error.phone && <Text style={styles.error}>{error.phone}</Text>}
-
-            <CustomTextInput
-              placeholder={t('Enter_password')}
-              value={form?.password}
-              onChangeText={text => handleChange('password', text)}
-              secure={true}
-            />
-            {error.password && (
-              <Text style={styles.error}>{error.password}</Text>
-            )}
-
-            <CustomTextInput
-              placeholder={t('Repeat_password')}
-              value={form?.confirmPassword}
-              onChangeText={text => handleChange('confirmPassword', text)}
-              secure={true}
-            />
-            {error.confirmPassword && (
-              <Text style={styles.error}>{error.confirmPassword}</Text>
-            )}
-          </View>
-
-          <View
-            style={[
-              styles.checkboxContainer,
-              !error?.checkbox && {marginBottom: verticalScale(50)},
-            ]}>
-            <TouchableOpacity onPress={() => setIsChecked(!isChecked)}>
-              <View
-                style={[styles.checkbox, isChecked && styles.checkboxChecked]}>
-                {isChecked && (
-                  <Icon name="check" size={16} color={Color.black} />
-                )}
-              </View>
+          <CustomTextInput
+            placeholder={t('E-mail')}
+            value={form?.email}
+            onChangeText={text => handleChange('email', text)}
+            keyboardType="email-address"
+          />
+          {error.email && <Text style={styles.error}>{error.email}</Text>}
+          <View style={{flexDirection: 'row'}}>
+            <TouchableOpacity
+              style={styles.countryCodeSelector}
+              onPress={handlePresentModalPress}>
+              <Text style={styles.countryFlag}>{selectedCountryCode.flag}</Text>
+              <Text style={styles.selectedCountryCode}>
+                {selectedCountryCode.code}
+              </Text>
+              <Icon name="keyboard-arrow-down" size={20} color={Color.text} />
             </TouchableOpacity>
-            <Text style={styles.checkboxText}>
-              {t('I_agree_with_the_privacy_policy')}
-            </Text>
+
+            <CustomTextInput
+              placeholder={t('Phone_number')}
+              value={form?.phone}
+              onChangeText={text => handleChange('phone', text)}
+              keyboardType="phone-pad"
+              maxLength={10}
+            />
           </View>
-          {error.checkbox && (
-            <Text style={[styles.error, {marginBottom: verticalScale(30)}]}>
-              {error.checkbox}
-            </Text>
+          {error.phone && <Text style={styles.error}>{error.phone}</Text>}
+
+          <CustomTextInput
+            placeholder={t('Enter_password')}
+            value={form?.password}
+            onChangeText={text => handleChange('password', text)}
+            secure={true}
+          />
+          {error.password && <Text style={styles.error}>{error.password}</Text>}
+
+          <CustomTextInput
+            placeholder={t('Repeat_password')}
+            value={form?.confirmPassword}
+            onChangeText={text => handleChange('confirmPassword', text)}
+            secure={true}
+          />
+          {error.confirmPassword && (
+            <Text style={styles.error}>{error.confirmPassword}</Text>
           )}
         </View>
+
+        <View
+          style={[
+            styles.checkboxContainer,
+            !error?.checkbox && {marginBottom: verticalScale(50)},
+          ]}>
+          <TouchableOpacity onPress={() => setIsChecked(!isChecked)}>
+            <View
+              style={[styles.checkbox, isChecked && styles.checkboxChecked]}>
+              {isChecked && (
+                <Entypo name="check" size={16} color={Color.black} />
+              )}
+            </View>
+          </TouchableOpacity>
+          <Text style={styles.checkboxText}>
+            {t('I_agree_with_the_privacy_policy')}
+          </Text>
+        </View>
+        {error.checkbox && (
+          <Text style={[styles.error, {marginBottom: verticalScale(30)}]}>
+            {error.checkbox}
+          </Text>
+        )}
       </ScrollView>
 
       <ButtonComponent
-        buttonText={t('Register')}
+        buttonText={t('Continue')}
         onButtonPress={handleOTPVerification}
         buttonStyle={{bottom: verticalScale(20)}}
       />
@@ -320,13 +298,21 @@ const RegistrationScreen = () => {
         enablePanDownToClose={true}
         backgroundStyle={styles.bottomSheetBackground}
         handleIndicatorStyle={styles.bottomSheetIndicator}>
-        <View>
+        <View style={{flex: 1}}>
           <Text style={styles.bottomSheetTitle}>
             {t('Select_country_code')}
           </Text>
-          <FlatList data={countryCodes} renderItem={renderCountryItem} />
+
+          <BottomSheetFlatList
+            data={countryCodes}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={renderCountryItem}
+            contentContainerStyle={{paddingBottom: 20}}
+          />
         </View>
       </BottomSheet>
+
+      <LoadingOverlay visible={loading} text={t('Loading')} />
     </ScreenWrapper>
   );
 };
@@ -338,12 +324,12 @@ const styles = StyleSheet.create({
     color: Color.text,
     fontSize: scale(24),
     fontWeight: '600',
-    paddingVertical: verticalScale(20),
+    paddingVertical: verticalScale(10),
   },
   checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: verticalScale(10),
+    marginVertical: verticalScale(20),
     width: '100%',
   },
   checkboxText: {
@@ -411,5 +397,6 @@ const styles = StyleSheet.create({
     color: Color.text,
     fontSize: scale(18),
     fontWeight: '600',
+    paddingVertical: verticalScale(10),
   },
 });

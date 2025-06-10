@@ -36,5 +36,8 @@
     "Invalid_phone_number": "Invalid phone number",
     "Invalid_email_format": "Invalid email format",
     "Invalid_password": "Invalid password",
-    "Select_country_code": "Select country code"
+    "Select_country_code": "Select country code",
+    "Resend": "Resend",
+    "Enter_your_OTP": "Enter your OTP",
+    "Loading": "Loading..."
 }

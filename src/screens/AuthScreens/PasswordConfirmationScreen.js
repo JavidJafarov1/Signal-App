@@ -1,5 +1,12 @@
 import React, {useState} from 'react';
-import {View, StyleSheet, Text, Alert, ActivityIndicator} from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Text,
+  Alert,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import {Color} from '../../assets/color/Color';
 import UpperImage from '../../components/UpperImage';
@@ -7,10 +14,11 @@ import ButtonComponent from '../../components/ButtonComponent';
 import TextComponent from '../../components/TextComponent';
 import useAppHooks from '../../auth/useAppHooks';
 import {scale, verticalScale} from 'react-native-size-matters';
-import {Login} from '../../utils/Apis/AuthApi';
+import {Login, ResetPassword} from '../../utils/Apis/AuthApi';
 import CustomTextInput from '../../components/Input';
 import {setAuthToken} from '../../store/reducer/authReducer';
 import {validatePassword} from '../../utils/helpers';
+import LoadingOverlay from '../../components/Loader';
 
 const PasswordConfirmationScreen = () => {
   const {navigation, t, route, dispatch} = useAppHooks();
@@ -40,11 +48,14 @@ const PasswordConfirmationScreen = () => {
     setLoading(true);
     try {
       const response = await Login(data);
+      console.log('response', response);
       if (response?.success === true || response?.token) {
+        Alert.alert('Success', 'User login succcessfully');
         dispatch(setAuthToken(response?.token));
       }
     } catch (error) {
-      const errorMessage = error?.response?.data?.error || '';
+      const errorMessage =
+        error?.response?.data?.error || 'Something went wrong';
 
       if (errorMessage === 'Please verify OTP before logging in') {
         Alert.alert('Error', errorMessage, [
@@ -62,24 +73,29 @@ const PasswordConfirmationScreen = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: Color.backgroundColor,
-        }}>
-        <ActivityIndicator size="large" color={Color.white} />
-      </View>
-    );
-  }
+  const handleResetPassword = async () => {
+    setLoading(true);
+    try {
+      const response = await ResetPassword(email);
+      console.log('response', response);
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        error?.response?.data?.error || 'Something went wrong',
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <ScreenWrapper>
-      <UpperImage logo={true} back={true} />
-      <View style={{flex: 1, justifyContent: 'center'}}>
+      <View style={{marginTop: verticalScale(20)}}>
+        <UpperImage logo={true} />
+        <UpperImage back={true} />
+      </View>
+
+      <ScrollView style={{flexGrow: 1}}>
         <TextComponent />
         <CustomTextInput
           placeholder={t('Enter_password')}
@@ -94,14 +110,19 @@ const PasswordConfirmationScreen = () => {
           <Text style={{color: 'red', marginLeft: scale(10)}}>{error}</Text>
         ) : null}
 
-        <Text style={styles.title}>{t('Forgot_your_password')}</Text>
-      </View>
+        <TouchableOpacity onPress={handleResetPassword}>
+          <Text style={styles.title}>{t('Forgot_your_password')}</Text>
+        </TouchableOpacity>
+      </ScrollView>
+
       <ButtonComponent
         buttonText={t('Login')}
         buttonStyle={{backgroundColor: Color.white, bottom: verticalScale(20)}}
         buttonTextStyle={{color: Color.blue}}
         onButtonPress={handlePasswordConfirmation}
       />
+
+      <LoadingOverlay visible={loading} text={t('Loading')} />
     </ScreenWrapper>
   );
 };

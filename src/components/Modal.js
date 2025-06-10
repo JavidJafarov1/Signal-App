@@ -2,7 +2,6 @@ import React from 'react';
 import {
   View,
   Text,
-  Pressable,
   StyleSheet,
   Dimensions,
   Image,
@@ -18,9 +17,9 @@ const CustomModal = ({isVisible, onClose, modalData}) => {
   return (
     <Modal isVisible={isVisible} onBackdropPress={onClose} style={styles.modal}>
       <View style={styles.container}>
-        <Pressable style={styles.closeButton} onPress={onClose}>
+        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
           <Feather name="x" size={28} color="white" />
-        </Pressable>
+        </TouchableOpacity>
 
         <View style={styles.content}>
           <View
