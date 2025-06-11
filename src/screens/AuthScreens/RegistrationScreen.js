@@ -58,12 +58,12 @@ const RegistrationScreen = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState({});
   const [form, setForm] = useState({
-    firstName: 'asd',
-    lastName: 'asd',
-    email: 'asdwerf@gmail.com',
-    phone: '9452145263',
-    password: 'ad123wer',
-    confirmPassword: 'ad123wer',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
   });
 
   const handleChange = (key, value) => {
@@ -134,6 +134,11 @@ const RegistrationScreen = () => {
     return valid;
   };
 
+  const params = {
+    email: form?.email,
+    screen: 'Registration',
+  };
+
   const handleOTPVerification = async () => {
     if (validateForm()) {
       setLoading(true);
@@ -149,7 +154,7 @@ const RegistrationScreen = () => {
               text: 'OK',
               onPress: () =>
                 navigation.navigate('OTPVerificationScreen', {
-                  email: form?.email,
+                  params,
                 }),
             },
           ]);

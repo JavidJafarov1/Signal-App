@@ -20,6 +20,8 @@ const CustomTextInput = ({
   isSearch = false,
   style,
   maxLength,
+  placeholderTextColor,
+  inputStyle,
 }) => {
   const [showPassword, setShowPassword] = useState(!secure);
 
@@ -41,10 +43,11 @@ const CustomTextInput = ({
           onChangeText={onChangeText}
           secureTextEntry={!showPassword}
           keyboardType={keyboardType}
-          placeholderTextColor={Color.text}
+          placeholderTextColor={Color.text || placeholderTextColor}
           maxLength={maxLength}
           style={[
             styles.input,
+            inputStyle,
             isSearch && {paddingLeft: 30},
             icon && {paddingRight: 40},
           ]}

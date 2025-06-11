@@ -14,7 +14,7 @@ import ButtonComponent from '../../components/ButtonComponent';
 import TextComponent from '../../components/TextComponent';
 import useAppHooks from '../../auth/useAppHooks';
 import {scale, verticalScale} from 'react-native-size-matters';
-import {Login, ResetPassword} from '../../utils/Apis/AuthApi';
+import {ForgotPassword, Login} from '../../utils/Apis/AuthApi';
 import CustomTextInput from '../../components/Input';
 import {setAuthToken} from '../../store/reducer/authReducer';
 import {validatePassword} from '../../utils/helpers';
@@ -24,7 +24,7 @@ const PasswordConfirmationScreen = () => {
   const {navigation, t, route, dispatch} = useAppHooks();
   const email = route?.params?.email;
 
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState('demo@1234');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -75,9 +75,30 @@ const PasswordConfirmationScreen = () => {
 
   const handleResetPassword = async () => {
     setLoading(true);
+    const data = {
+      email: email,
+    };
+
+    const params = {
+      email: email,
+      screen: 'ForgotPassword',
+    };
+
     try {
-      const response = await ResetPassword(email);
+      const response = await ForgotPassword(data);
       console.log('response', response);
+      if (
+        response?.success === true ||
+        response?.message === 'OTP sent to email'
+      ) {
+        Alert.alert('Error', response?.message, [
+          {
+            text: 'OK',
+            onPress: () =>
+              navigation.navigate('OTPVerificationScreen', {params}),
+          },
+        ]);
+      }
     } catch (error) {
       Alert.alert(
         'Error',

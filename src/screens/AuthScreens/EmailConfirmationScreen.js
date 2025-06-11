@@ -15,7 +15,7 @@ import LoadingOverlay from '../../components/Loader';
 const EmailConfirmationScreen = () => {
   const {navigation, t} = useAppHooks();
 
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('Demo@gmail.com');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 

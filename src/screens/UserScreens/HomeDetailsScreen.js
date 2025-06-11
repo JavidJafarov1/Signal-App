@@ -3,6 +3,7 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import React, {useState} from 'react';
@@ -17,6 +18,7 @@ import useAppHooks from '../../auth/useAppHooks';
 const HomeDetailsScreen = () => {
   const {navigation, t, route} = useAppHooks();
   const data = route?.params?.item;
+  console.log('data', data);
 
   return (
     <ScreenWrapper>
@@ -61,7 +63,7 @@ const HomeDetailsScreen = () => {
         {data?.music}
       </Text>
 
-      <View
+      <TouchableOpacity
         style={{
           backgroundColor: Color.blue,
           height: scale(50),
@@ -69,8 +71,12 @@ const HomeDetailsScreen = () => {
           alignItems: 'center',
           justifyContent: 'center',
         }}>
-        <AntDesign name="hearto" size={28} color={Color.white} />
-      </View>
+        <AntDesign
+          name={data?.like ? 'heart' : 'hearto'}
+          size={28}
+          color={Color.white}
+        />
+      </TouchableOpacity>
     </ScreenWrapper>
   );
 };

@@ -7,8 +7,11 @@ import UpperImage from '../../components/UpperImage';
 import ButtonComponent from '../../components/ButtonComponent';
 import useAppHooks from '../../auth/useAppHooks';
 import {scale, verticalScale} from 'react-native-size-matters';
-import {OTPVerification, ResendOTPVerification} from '../../utils/Apis/AuthApi';
-import {setAuthToken} from '../../store/reducer/authReducer';
+import {
+  ForgotOTPVerification,
+  OTPVerification,
+  ResendOTPVerification,
+} from '../../utils/Apis/AuthApi';
 import LoadingOverlay from '../../components/Loader';
 
 const OTPVerificationScreen = () => {
@@ -16,16 +19,50 @@ const OTPVerificationScreen = () => {
 
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
-  const email = route?.params?.email;
+  const email = route?.params?.params?.email;
 
-  useEffect(() => {
-    Alert.alert(
-      'Success',
-      'Check your mail, we have sent you a verification code.',
-    );
-  }, []);
+  const screen = route?.params?.params?.screen;
 
-  const handleRegister = async () => {
+  const handleRegister = () => {
+    if (screen === 'ForgotPassword') {
+      ForgotPasswordOTP();
+    } else if (screen === 'Registration') {
+      verifyOTP();
+    }
+  };
+
+  const ForgotPasswordOTP = async () => {
+    if (otp.length !== 6) {
+      Alert.alert('Error', 'Please enter the complete OTP');
+      return;
+    }
+    setLoading(true);
+
+    try {
+      const data = {
+        email: email,
+        otp: otp,
+      };
+      console.log('data', data);
+
+      const response = await ForgotOTPVerification(data);
+      if (
+        response?.message === 'OTP verified successfully' ||
+        response?.success === true
+      ) {
+        navigation.navigate('EmailConfirmationScreen');
+      }
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        error?.response?.data?.error || 'Something went wrong',
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyOTP = async () => {
     if (otp.length !== 6) {
       Alert.alert('Error', 'Please enter the complete OTP');
       return;
@@ -43,9 +80,7 @@ const OTPVerificationScreen = () => {
         response?.message === 'OTP verified successfully' ||
         response?.success === true
       ) {
-        dispatch(setAuthToken(email));
-      } else {
-        Alert.alert('Error', 'OTP verification failed');
+        navigation.navigate('EmailConfirmationScreen');
       }
     } catch (error) {
       Alert.alert(
@@ -55,6 +90,7 @@ const OTPVerificationScreen = () => {
     } finally {
       setLoading(false);
     }
+    console.log('verify');
   };
 
   const handleResendOTP = async () => {
@@ -68,8 +104,6 @@ const OTPVerificationScreen = () => {
         response?.success === true
       ) {
         Alert.alert('Success', response?.message);
-      } else {
-        Alert.alert('Error', 'OTP verification failed');
       }
     } catch (error) {
       Alert.alert(

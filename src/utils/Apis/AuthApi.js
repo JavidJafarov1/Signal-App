@@ -46,6 +46,35 @@ export const Login = async data => {
   }
 };
 
+export const ForgotPassword = async data => {
+  try {
+    const url = `${BASE_URL}/api/auth/forgot-password`;
+    const body = {
+      email: data?.email,
+    };
+
+    const response = await axios.post(url, body);
+    return response?.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const ForgotOTPVerification = async data => {
+  try {
+    const url = `${BASE_URL}/api/auth/forgot-password/verify-otp`;
+    const body = {
+      email: data?.email,
+      otp: data?.otp,
+    };
+    console.log('body*-*-*-', body);
+    const response = await axios.post(url, body);
+    return response?.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const OTPVerification = async data => {
   try {
     const url = `${BASE_URL}/api/auth/verify-otp`;
@@ -77,7 +106,7 @@ export const ResendOTPVerification = async data => {
 
 export const ResetPassword = async data => {
   try {
-    const url = `${BASE_URL}/api/auth/forgot-password`;
+    const url = `${BASE_URL}/api/auth/reset-password`;
     const body = {
       email: data,
     };

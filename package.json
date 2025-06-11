@@ -34,6 +34,7 @@
     "react-native-screens": "^3.31.1",
     "react-native-size-matters": "^0.4.2",
     "react-native-sound": "^0.11.2",
+    "react-native-splash-screen": "^3.3.0",
     "react-native-svg": "^15.2.0",
     "react-native-svg-transformer": "^0.14.3",
     "react-native-vector-icons": "^10.2.0",
