@@ -24,7 +24,7 @@ const PasswordConfirmationScreen = () => {
   const {navigation, t, route, dispatch} = useAppHooks();
   const email = route?.params?.email;
 
-  const [password, setPassword] = useState('demo@1234');
+  const [password, setPassword] = useState('demo@123');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 

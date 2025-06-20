@@ -11,6 +11,8 @@ import {CheckUserExistOrNot} from '../../utils/Apis/AuthApi';
 import CustomTextInput from '../../components/Input';
 import {validateEmail} from '../../utils/helpers';
 import LoadingOverlay from '../../components/Loader';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import auth from '@react-native-firebase/auth';
 
 const EmailConfirmationScreen = () => {
   const {navigation, t} = useAppHooks();
@@ -18,6 +20,10 @@ const EmailConfirmationScreen = () => {
   const [email, setEmail] = useState('Demo@gmail.com');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleGoogleLogin = async () => {
+    console.log('----');
+  };
 
   const handleEmailConfiguration = async () => {
     if (!email) {
@@ -96,7 +102,10 @@ const EmailConfirmationScreen = () => {
           <ButtonComponent buttonText={t('VK')} />
         </View>
         <View style={{flex: 1}}>
-          <ButtonComponent buttonText={t('G')} />
+          <ButtonComponent
+            buttonText={t('G')}
+            onButtonPress={handleGoogleLogin}
+          />
         </View>
       </View>
 

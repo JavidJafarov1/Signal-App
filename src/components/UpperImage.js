@@ -5,7 +5,7 @@ import {Color} from '../assets/color/Color';
 import useAppHooks from '../auth/useAppHooks';
 import Feather from 'react-native-vector-icons/Feather';
 
-const UpperImage = ({back, logo}) => {
+const UpperImage = ({back, logo, style, innerStyle}) => {
   const {navigation} = useAppHooks();
 
   const handleBack = () => {
@@ -26,8 +26,8 @@ const UpperImage = ({back, logo}) => {
       )}
       {logo && (
         <View>
-          <View style={styles.logoBox}>
-            <View style={styles.logoInnerBox}></View>
+          <View style={[styles.logoBox, style]}>
+            <View style={[styles.logoInnerBox, innerStyle]}></View>
           </View>
         </View>
       )}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -6,8 +6,28 @@ import {Color} from '../../assets/color/Color';
 import {scale, verticalScale} from 'react-native-size-matters';
 import Header from '../../components/Header';
 import ScreenWrapper from '../../components/ScreenWrapper';
+import {Profile} from '../../utils/Apis/AllArtist';
+import {useSelector} from 'react-redux';
 
 const ProfileScreen = () => {
+  const token = useSelector(state => state?.auth?.authToken);
+
+  const [profileData, setProfileData] = useState();
+  console.log('response', profileData);
+
+  const GetProfile = async () => {
+    try {
+      const response = await Profile(token);
+      setProfileData(response?.user);
+    } catch (error) {
+      console.error('Error fetching artists:', error);
+    }
+  };
+
+  useEffect(() => {
+    GetProfile();
+  }, []);
+
   return (
     <ScreenWrapper>
       <Header />
@@ -17,26 +37,22 @@ const ProfileScreen = () => {
             <Text style={styles.textStyle}>?</Text>
           </View>
           <View>
-            <Text style={styles.textStyle}>Привет,</Text>
-            <Text
-              style={[
-                styles.textStyle,
-                {fontWeight: '600', fontSize: scale(20)},
-              ]}>
-              ГОСТЬ
-            </Text>
-            <Text style={styles.textStyle}>Вы вошли как гость.</Text>
+            {/* <Text style={styles.textStyle}>Привет,</Text>
+
+            <Text style={styles.textStyle}>Вы вошли как гость.</Text> */}
+             <Text style={styles.textStyle}>{profileData?.firstName}</Text>
+            <Text style={styles.textStyle}>{profileData?.lastName}</Text>
           </View>
         </View>
 
-        <Text style={styles.infoText}>
+        {/* <Text style={styles.infoText}>
           Для доступа ко всем функциям раздела Signal People необходимо войти
           или зарегистрироваться
-        </Text>
+        </Text> */}
       </View>
-      <TouchableOpacity style={styles.loginButton}>
+      {/* <TouchableOpacity style={styles.loginButton}>
         <Text style={styles.textStyle}>Вход/Регистрация</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </ScreenWrapper>
   );
 };

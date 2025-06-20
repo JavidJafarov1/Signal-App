@@ -9,6 +9,7 @@ import {
 import React from 'react';
 import {Color} from '../assets/color/Color';
 import {scale, verticalScale} from 'react-native-size-matters';
+import UpperImage from './UpperImage';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -20,7 +21,12 @@ const CustomImage = ({backgroundImage, image, text, fullSize}) => {
         style={[{height: fullSize ? 300 : 150}, styles.image]}
         resizeMode="cover">
         <View style={{flex: 1, padding: scale(12)}}>
-          <Image source={image} style={{height: 20, width: 20}} />
+          {/* <Image source={image} style={{height: 20, width: 20}} /> */}
+          <UpperImage
+            logo={true}
+            style={{height: 20, width: 20}}
+            innerStyle={{height: 10, width: 10}}
+          />
           <Text
             style={{
               position: 'absolute',

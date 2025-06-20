@@ -47,7 +47,7 @@ const HomeDetailsScreen = () => {
         <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
           <AntDesign name="earth" size={20} color={Color.white} />
           <Text style={[styles.textStyle, {fontSize: scale(18)}]}>
-            {data?.city}
+            {data?.location}
           </Text>
         </View>
         <Text style={[styles.textStyle, {backgroundColor: Color.blue}]}>

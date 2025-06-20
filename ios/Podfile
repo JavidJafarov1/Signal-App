@@ -6,6 +6,7 @@ require Pod::Executable.execute_command('node', ['-p',
   )', __dir__]).strip
 
 platform :ios, min_ios_version_supported
+use_frameworks! :linkage => :static
 prepare_react_native_project!
 
 # If you are using a `react-native-flipper` your iOS build will fail when `NO_FLIPPER=1` is set.
@@ -17,7 +18,8 @@ prepare_react_native_project!
 #   dependencies: {
 #     ...(process.env.NO_FLIPPER ? { 'react-native-flipper': { platforms: { ios: null } } } : {}),
 # ```
-flipper_config = ENV['NO_FLIPPER'] == "1" ? FlipperConfiguration.disabled : FlipperConfiguration.enabled
+flipper_config = FlipperConfiguration.disabled
+
 
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
@@ -39,8 +41,12 @@ target 'Signal' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  pod 'GoogleMaps'
-pod 'Google-Maps-iOS-Utils' 
+pod 'GoogleMaps'
+pod 'Google-Maps-iOS-Utils'
+pod 'FirebaseAuth'
+pod 'FirebaseCore'
+pod 'GoogleUtilities'
+
 
   target 'SignalTests' do
     inherit! :complete
