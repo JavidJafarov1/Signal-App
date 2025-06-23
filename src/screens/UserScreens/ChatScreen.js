@@ -359,19 +359,188 @@
 //   return <ScreenWrapper>{renderGiftedChat()}</ScreenWrapper>;
 // }
 
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import ScreenWrapper from '../../components/ScreenWrapper';
+import {onMessage, sendMessage, authenticate} from '../../utils/socket';
 
+const ChatScreen = ({route}) => {
+  const {user, senderId} = route.params; // user is RECEIVER, senderId is SENDER_ID
+  const [messageText, setMessageText] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+  useEffect(() => {
+    // Authenticate user
+    authenticate(senderId, response => {
+      if (response.success) {
+        setIsAuthenticated(true);
+        console.log('🔐 Sender authenticated in ChatScreen');
+      } else {
+        console.error('Authentication failed:', response.error);
+      }
+    });
 
-const ChatScreen = () => {
-  return (
-    <View>
-      <Text>ChatScreen</Text>
+    // Listen for incoming messages
+    onMessage(msg => {
+      // Only add messages for this conversation
+      if (
+        (msg.senderId === senderId && msg.receiverId === user._id) ||
+        (msg.senderId === user._id && msg.receiverId === senderId)
+      ) {
+        setMessages(prevMessages => [...prevMessages, msg]);
+      }
+    });
+
+    // Cleanup (optional: remove socket listeners if needed)
+    return () => {};
+  }, [senderId, user._id]);
+
+  const handleSendMessage = () => {
+    if (!messageText.trim() || !isAuthenticated) return;
+
+    const message = {
+      chatType: 'private',
+      content: messageText,
+      senderId: senderId,
+      receiverId: user._id,
+      timestamp: new Date().toISOString(),
+    };
+
+    sendMessage(message);
+    setMessages(prevMessages => [...prevMessages, message]);
+    setMessageText('');
+  };
+
+  const renderMessage = ({item}) => (
+    <View
+      style={[
+        styles.messageContainer,
+        item.senderId === senderId
+          ? styles.sentMessage
+          : styles.receivedMessage,
+      ]}>
+      <Text style={styles.messageText}>{item.content}</Text>
+      <Text style={styles.timestamp}>
+        {new Date(item.timestamp).toLocaleTimeString()}
+      </Text>
     </View>
-  )
-}
+  );
 
-export default ChatScreen
+  return (
+    <ScreenWrapper>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={90}>
+        <FlatList
+          data={messages}
+          renderItem={renderMessage}
+          keyExtractor={(item, index) => `${item.timestamp}-${index}`}
+          style={styles.messageList}
+          contentContainerStyle={styles.messageListContent}
+        />
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            value={messageText}
+            onChangeText={setMessageText}
+            placeholder={
+              isAuthenticated ? 'Type a message...' : 'Authenticating...'
+            }
+            multiline
+            editable={isAuthenticated}
+          />
+          <TouchableOpacity
+            style={[
+              styles.sendButton,
+              !isAuthenticated && styles.disabledButton,
+            ]}
+            onPress={handleSendMessage}
+            disabled={!isAuthenticated}>
+            <Text style={styles.sendButtonText}>Send</Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </ScreenWrapper>
+  );
+};
 
-const styles = StyleSheet.create({})
+export default ChatScreen;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  messageList: {
+    flex: 1,
+  },
+  messageListContent: {
+    padding: 10,
+  },
+  messageContainer: {
+    maxWidth: '70%',
+    padding: 10,
+    borderRadius: 10,
+    marginVertical: 5,
+  },
+  sentMessage: {
+    backgroundColor: '#DCF8C6',
+    alignSelf: 'flex-end',
+  },
+  receivedMessage: {
+    backgroundColor: '#ECECEC',
+    alignSelf: 'flex-start',
+  },
+  messageText: {
+    fontSize: 16,
+    color: '#000',
+  },
+  timestamp: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 5,
+    textAlign: 'right',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    padding: 10,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 25,
+  },
+  input: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 20,
+    padding: 10,
+    maxHeight: 100,
+    fontSize: 16,
+  },
+  sendButton: {
+    backgroundColor: '#007AFF',
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    marginLeft: 10,
+    justifyContent: 'center',
+  },
+  sendButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  disabledButton: {
+    backgroundColor: '#ccc',
+  },
+});

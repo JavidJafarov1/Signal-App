@@ -23,47 +23,47 @@ const ResetPasswordScreen = () => {
   const [loading, setLoading] = useState(false);
 
   const handlePasswordConfirmation = async () => {
-    // setPasswordError('');
-    // setConfirmPasswordError('');
+    setPasswordError('');
+    setConfirmPasswordError('');
 
-    // if (!password) {
-    //   setPasswordError(t('Password_is_required'));
-    //   return;
-    // }
-    // if (!validatePassword(password)) {
-    //   setPasswordError(t('Please_enter_a_valid_password'));
-    //   return;
-    // }
+    if (!password) {
+      setPasswordError(t('Password_is_required'));
+      return;
+    }
+    if (!validatePassword(password)) {
+      setPasswordError(t('Please_enter_a_valid_password'));
+      return;
+    }
 
-    // if (!confirmPassword) {
-    //   setConfirmPasswordError(t('Confirm_password_is_required'));
-    //   return;
-    // }
-    // if (password !== confirmPassword) {
-    //   setConfirmPasswordError(t('Passwords_do_not_match'));
-    //   return;
-    // }
+    if (!confirmPassword) {
+      setConfirmPasswordError(t('Confirm_password_is_required'));
+      return;
+    }
+    if (password !== confirmPassword) {
+      setConfirmPasswordError(t('Passwords_do_not_match'));
+      return;
+    }
 
-    // setLoading(true);
-    // try {
-    //   const response = await ResetPasswordConfirmation({
-    //     email: email,
-    //     password: password,
-    //   });
-    //   console.log('response', response);
+    setLoading(true);
+    try {
+      const response = await ResetPasswordConfirmation({
+        email: email,
+        password: password,
+      });
+      console.log('response', response);
 
-    //   Alert.alert(t('Success'), t('Password_reset_successful'), [
-    //     {
-    //       text: t('OK'),
-    //       onPress: () => navigation.navigate('LoginScreen'),
-    //     },
-    //   ]);
-    // } catch (error) {
-    //   console.error('Password reset error:', error);
-    //   Alert.alert(t('Error'), error?.message || t('Password_reset_failed'));
-    // } finally {
-    //   setLoading(false);
-    // }
+      Alert.alert(t('Success'), t('Password_reset_successful'), [
+        {
+          text: t('OK'),
+          onPress: () => navigation.navigate('LoginScreen'),
+        },
+      ]);
+    } catch (error) {
+      console.error('Password reset error:', error);
+      Alert.alert(t('Error'), error?.message || t('Password_reset_failed'));
+    } finally {
+      setLoading(false);
+    }
     console.log('reset');
   };
 

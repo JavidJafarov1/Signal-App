@@ -221,40 +221,146 @@
 //   loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 // });
 
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  FlatList,
+  Image,
+} from 'react-native';
 import React, {useEffect} from 'react';
-import {connectSocket, disconnectSocket} from '../../utils/socket';
+import {
+  connectSocket,
+  disconnectSocket,
+  authenticate,
+} from '../../utils/socket';
 import ScreenWrapper from '../../components/ScreenWrapper';
+import {useNavigation} from '@react-navigation/native';
 
 const ConversationsListScreen = () => {
+  const SENDER_ID = '683fcd41baca306240f3a5a9';
+  const RECEIVER_ID = '683fcd41baca306240f3a5c7';
+  const GROUP_ID = '68469d4957c04e4770d1ea73';
+
+  const SENDER = {
+    _id: '683fcd41baca306240f3a5a9',
+    name: 'Armin van Buuren',
+    photo: 'https://example.com/images/armin.jpg',
+  };
+  const RECEIVER = {
+    id: '683fcd41baca306240f3a5a7',
+    name: 'Martin Garrix',
+    photo: require('../../assets/image/bgimage.jpg'),
+  };
+
+  // List of users for the conversation
+  const conversations = [
+    {
+      participant: RECEIVER,
+      lastMessage: 'Hey, how’s it going?', // Placeholder; fetch from DB in production
+    },
+  ];
+
+  const navigation = useNavigation();
+
   useEffect(() => {
-    connectSocket();
+    connectSocket(); // Connect on mount
+    authenticate(SENDER_ID, response => {
+      if (response.success) {
+        console.log('🔐 Sender authenticated');
+      } else {
+        console.error('Authentication failed:', response.error);
+      }
+    });
+
+    return () => {
+      disconnectSocket(); // Disconnect on unmount
+    };
   }, []);
 
-  const connect = () => {
-    connectSocket();
-  };
-
-  const disconnect = () => {
-    disconnectSocket();
-  };
+  const renderConversation = ({item}) => (
+    <TouchableOpacity
+      style={styles.conversationItem}
+      onPress={() =>
+        navigation.navigate('ChatScreen', {
+          user: item.participant,
+          senderId: SENDER_ID,
+        })
+      }>
+      {console.log('item', item)}
+      <Image source={item?.photo} />
+      <Text style={styles.conversationName}>{item.participant.name}</Text>
+      <Text style={styles.lastMessage} numberOfLines={1}>
+        {item.lastMessage}
+      </Text>
+    </TouchableOpacity>
+  );
 
   return (
     <ScreenWrapper>
-      <TouchableOpacity
-        style={{backgroundColor: '#fff', padding: 10, margin: 5}}
-        onPress={() => connect()}>
-        <Text>Socket Connect</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={{backgroundColor: '#fff', padding: 10, margin: 5}}
-        onPress={() => disconnect()}>
-        <Text>Socket Disconnect</Text>
-      </TouchableOpacity>
+      <View style={styles.container}>
+        {/* <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => connectSocket()}>
+            <Text style={styles.buttonText}>Socket Connect</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => disconnectSocket()}>
+            <Text style={styles.buttonText}>Socket Disconnect</Text>
+          </TouchableOpacity>
+        </View> */}
+        <FlatList
+          data={conversations}
+          renderItem={renderConversation}
+          keyExtractor={item => item.participant._id}
+          style={styles.conversationList}
+        />
+      </View>
     </ScreenWrapper>
   );
 };
 
 export default ConversationsListScreen;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 10,
+  },
+  button: {
+    backgroundColor: '#fff',
+    padding: 10,
+    margin: 5,
+    borderRadius: 5,
+    elevation: 2,
+  },
+  buttonText: {
+    fontSize: 16,
+    color: '#000',
+  },
+  conversationList: {
+    flex: 1,
+  },
+  conversationItem: {
+    padding: 15,
+    // borderBottomWidth: 1,
+    // borderBottomColor: '#ddd',
+  },
+  conversationName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  lastMessage: {
+    fontSize: 14,
+    color: '#888',
+    marginTop: 5,
+  },
+});

@@ -67,7 +67,6 @@ export const ForgotOTPVerification = async data => {
       email: data?.email,
       otp: data?.otp,
     };
-    console.log('body*-*-*-', body);
     const response = await axios.post(url, body);
     return response?.data;
   } catch (error) {

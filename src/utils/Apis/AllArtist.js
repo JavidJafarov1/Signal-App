@@ -11,7 +11,6 @@ export const AllArtist = async (token) => {
       },
     });
 
-    // console.log('API Raw Response:', response?.data);
     return response?.data;
   } catch (error) {
     console.error('Error fetching artists:', error?.response?.data || error);
@@ -30,7 +29,6 @@ export const Profile = async (token) => {
       },
     });
 
-    console.log('API Raw Response:', response?.data);
     return response?.data;
   } catch (error) {
     console.error('Error fetching artists:', error?.response?.data || error);

@@ -7,14 +7,15 @@ import {UserStack} from './UserNavigator';
 const RootStack = createStackNavigator();
 
 const AppNavigator = () => {
-  const user = useSelector(state => state?.auth?.authToken);
+  const user = useSelector(state => state?.auth?.userDetails);
+  console.log('user', user);
 
   return (
     <RootStack.Navigator
       screenOptions={{
         headerShown: false,
       }}>
-      {user?.length > 0 ? (
+      {user?.token ? (
         <RootStack.Screen name="UserStack" component={UserStack} />
       ) : (
         <RootStack.Screen name="AuthStack" component={AuthStack} />

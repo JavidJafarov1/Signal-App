@@ -9,14 +9,13 @@ import ScreenWrapper from '../../components/ScreenWrapper';
 import {Profile} from '../../utils/Apis/AllArtist';
 import {useSelector} from 'react-redux';
 import useAppHooks from '../../auth/useAppHooks';
-import {setAuthToken} from '../../store/reducer/authReducer';
+import {setuserDetails} from '../../store/reducer/authReducer';
 
 const ProfileScreen = () => {
   const {navigation, dispatch, t} = useAppHooks();
-  const token = useSelector(state => state?.auth?.authToken);
+  const token = useSelector(state => state?.auth?.userDetails?.token);
 
   const [profileData, setProfileData] = useState();
-  console.log('response', profileData);
 
   const GetProfile = async () => {
     try {
@@ -53,13 +52,13 @@ const ProfileScreen = () => {
           или зарегистрироваться
         </Text> */}
       </View>
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={styles.loginButton}
         onPress={() => {
-          dispatch(setAuthToken(''));
+          dispatch(setuserDetails({}));
         }}>
         <Text style={styles.textStyle}>Log Out</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </ScreenWrapper>
   );
 };

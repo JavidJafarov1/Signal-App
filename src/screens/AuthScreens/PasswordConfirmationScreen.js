@@ -16,14 +16,16 @@ import useAppHooks from '../../auth/useAppHooks';
 import {scale, verticalScale} from 'react-native-size-matters';
 import {ForgotPassword, Login} from '../../utils/Apis/AuthApi';
 import CustomTextInput from '../../components/Input';
-import {setAuthToken} from '../../store/reducer/authReducer';
+import {setuserDetails} from '../../store/reducer/authReducer';
 import {validatePassword} from '../../utils/helpers';
 import LoadingOverlay from '../../components/Loader';
+import {useDispatch, useSelector} from 'react-redux';
 
 const PasswordConfirmationScreen = () => {
   const {navigation, t, route, dispatch} = useAppHooks();
   const email = route?.params?.email;
 
+  const token = useSelector(state => state?.auth?.userDetails);
   const [password, setPassword] = useState('demo@123');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -44,15 +46,15 @@ const PasswordConfirmationScreen = () => {
       email: email,
       password: password,
     };
-
-    setLoading(true);
+    console.log('data', data);
     try {
       const response = await Login(data);
-      console.log('response', response);
+      console.log('response-=-=-=-=-=', response);
       if (response?.success === true || response?.token) {
-        Alert.alert('Success', 'User login succcessfully');
-        dispatch(setAuthToken(response?.token));
+        dispatch(setuserDetails(response));
       }
+
+      Alert.alert('Success', 'User login successfully');
     } catch (error) {
       const errorMessage =
         error?.response?.data?.error || 'Something went wrong';

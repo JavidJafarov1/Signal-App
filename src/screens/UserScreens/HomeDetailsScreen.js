@@ -18,7 +18,6 @@ import useAppHooks from '../../auth/useAppHooks';
 const HomeDetailsScreen = () => {
   const {navigation, t, route} = useAppHooks();
   const data = route?.params?.item;
-  console.log('data', data);
 
   return (
     <ScreenWrapper>

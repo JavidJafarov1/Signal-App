@@ -43,7 +43,6 @@ const OTPVerificationScreen = () => {
         email: email,
         otp: otp,
       };
-      console.log('data', data);
 
       const response = await ForgotOTPVerification(data);
       if (

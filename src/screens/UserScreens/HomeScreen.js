@@ -2,7 +2,7 @@ import {FlatList, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import Header from '../../components/Header';
 import CustomImage from '../../components/ImageComponent';
-import {setAuthToken} from '../../store/reducer/authReducer';
+import {setArtistData, setuserDetails} from '../../store/reducer/authReducer';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import useAppHooks from '../../auth/useAppHooks';
 import {Color} from '../../assets/color/Color';
@@ -18,7 +18,8 @@ const HomeScreen = () => {
   const [showLikedOnly, setShowLikedOnly] = useState(false);
   const [artists, setArtists] = useState([]);
 
-  const token = useSelector(state => state?.auth?.authToken);
+  const token = useSelector(state => state?.auth?.userDetails?.token);
+  console.log('-=-=-=-==', token);
 
   const GetAllArtists = async () => {
     try {
@@ -44,6 +45,7 @@ const HomeScreen = () => {
         text: item.name || 'Artist',
       }));
       setArtists(enrichedArtists);
+      setArtistData(enrichedArtists);
     } catch (error) {
       console.error('Error fetching artists:', error);
     }
