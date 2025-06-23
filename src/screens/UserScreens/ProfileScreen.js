@@ -8,8 +8,11 @@ import Header from '../../components/Header';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import {Profile} from '../../utils/Apis/AllArtist';
 import {useSelector} from 'react-redux';
+import useAppHooks from '../../auth/useAppHooks';
+import {setAuthToken} from '../../store/reducer/authReducer';
 
 const ProfileScreen = () => {
+  const {navigation, dispatch, t} = useAppHooks();
   const token = useSelector(state => state?.auth?.authToken);
 
   const [profileData, setProfileData] = useState();
@@ -40,7 +43,7 @@ const ProfileScreen = () => {
             {/* <Text style={styles.textStyle}>Привет,</Text>
 
             <Text style={styles.textStyle}>Вы вошли как гость.</Text> */}
-             <Text style={styles.textStyle}>{profileData?.firstName}</Text>
+            <Text style={styles.textStyle}>{profileData?.firstName}</Text>
             <Text style={styles.textStyle}>{profileData?.lastName}</Text>
           </View>
         </View>
@@ -50,9 +53,13 @@ const ProfileScreen = () => {
           или зарегистрироваться
         </Text> */}
       </View>
-      {/* <TouchableOpacity style={styles.loginButton}>
-        <Text style={styles.textStyle}>Вход/Регистрация</Text>
-      </TouchableOpacity> */}
+      <TouchableOpacity
+        style={styles.loginButton}
+        onPress={() => {
+          dispatch(setAuthToken(''));
+        }}>
+        <Text style={styles.textStyle}>Log Out</Text>
+      </TouchableOpacity>
     </ScreenWrapper>
   );
 };
