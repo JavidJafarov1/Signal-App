@@ -19,13 +19,11 @@ import CustomTextInput from '../../components/Input';
 import {setuserDetails} from '../../store/reducer/authReducer';
 import {validatePassword} from '../../utils/helpers';
 import LoadingOverlay from '../../components/Loader';
-import {useDispatch, useSelector} from 'react-redux';
 
 const PasswordConfirmationScreen = () => {
   const {navigation, t, route, dispatch} = useAppHooks();
   const email = route?.params?.email;
 
-  const token = useSelector(state => state?.auth?.userDetails);
   const [password, setPassword] = useState('demo@123');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -46,10 +44,9 @@ const PasswordConfirmationScreen = () => {
       email: email,
       password: password,
     };
-    console.log('data', data);
+
     try {
       const response = await Login(data);
-      console.log('response-=-=-=-=-=', response);
       if (response?.success === true || response?.token) {
         dispatch(setuserDetails(response));
       }
@@ -88,7 +85,6 @@ const PasswordConfirmationScreen = () => {
 
     try {
       const response = await ForgotPassword(data);
-      console.log('response', response);
       if (
         response?.success === true ||
         response?.message === 'OTP sent to email'

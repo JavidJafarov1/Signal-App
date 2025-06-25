@@ -15,7 +15,7 @@ export const AuthStack = () => {
       screenOptions={{
         headerShown: false,
       }}>
-      <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
+      {/* <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} /> */}
       <Stack.Screen
         name="EmailConfirmationScreen"
         component={EmailConfirmationScreen}

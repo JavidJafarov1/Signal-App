@@ -11,8 +11,6 @@ import {CheckUserExistOrNot} from '../../utils/Apis/AuthApi';
 import CustomTextInput from '../../components/Input';
 import {validateEmail} from '../../utils/helpers';
 import LoadingOverlay from '../../components/Loader';
-import {GoogleSignin} from '@react-native-google-signin/google-signin';
-import auth from '@react-native-firebase/auth';
 
 const EmailConfirmationScreen = () => {
   const {navigation, t} = useAppHooks();

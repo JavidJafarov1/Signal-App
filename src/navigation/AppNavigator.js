@@ -8,7 +8,7 @@ const RootStack = createStackNavigator();
 
 const AppNavigator = () => {
   const user = useSelector(state => state?.auth?.userDetails);
-  console.log('user', user);
+
 
   return (
     <RootStack.Navigator

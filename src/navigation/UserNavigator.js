@@ -8,8 +8,9 @@ import SignalLiveScreen from '../screens/UserScreens/SignalLiveScreen';
 import PartnersScreen from '../screens/UserScreens/PartnersScreen';
 import MapScreen from '../screens/UserScreens/MapScreen';
 import ProgramDetailsScreen from '../screens/UserScreens/ProgramDetailsScreen';
-import ConversationsListScreen from '../screens/UserScreens/ConversationsListScreen';
-import ChatScreen from '../screens/UserScreens/ChatScreen';
+import ConversationsListScreen from '../screens/UserScreens/ChatFlow/ConversationsListScreen';
+import ChatScreen from '../screens/UserScreens/ChatFlow/ChatScreen';
+import AllUsersListScreen from '../screens/UserScreens/ChatFlow/AllUsersListScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -33,6 +34,7 @@ export const UserStack = () => {
       <Stack.Screen name="PartnersScreen" component={PartnersScreen} />
       <Stack.Screen name="ConversationsListScreen" component={ConversationsListScreen} />
       <Stack.Screen name="ChatScreen" component={ChatScreen} />
+      <Stack.Screen name="AllUsersListScreen" component={AllUsersListScreen} />
     </Stack.Navigator>
   );
 };

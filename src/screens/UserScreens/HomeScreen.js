@@ -1,5 +1,5 @@
 import {FlatList, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import Header from '../../components/Header';
 import CustomImage from '../../components/ImageComponent';
 import {setArtistData, setuserDetails} from '../../store/reducer/authReducer';
@@ -11,6 +11,8 @@ import CustomTextInput from '../../components/Input';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {AllArtist} from '../../utils/Apis/AllArtist';
 import {useSelector} from 'react-redux';
+import {useAuthToken} from '../../utils/api';
+import { useFocusEffect } from '@react-navigation/native';
 
 const HomeScreen = () => {
   const {navigation, dispatch, t} = useAppHooks();
@@ -18,8 +20,7 @@ const HomeScreen = () => {
   const [showLikedOnly, setShowLikedOnly] = useState(false);
   const [artists, setArtists] = useState([]);
 
-  const token = useSelector(state => state?.auth?.userDetails?.token);
-  console.log('-=-=-=-==', token);
+  const token = useAuthToken();
 
   const GetAllArtists = async () => {
     try {
@@ -38,9 +39,8 @@ const HomeScreen = () => {
 
       const enrichedArtists = artistList.map((item, index) => ({
         ...item,
-        like: false,
+        like: item.like === 1,
         id: item._id || index.toString(),
-        // backgroundImage: 'https://picsum.photos/200/300',
         image: item?.photo,
         text: item.name || 'Artist',
       }));
@@ -50,12 +50,13 @@ const HomeScreen = () => {
       console.error('Error fetching artists:', error);
     }
   };
-
-  useEffect(() => {
-    if (token) {
-      GetAllArtists();
-    }
-  }, [token]);
+  useFocusEffect(
+    useCallback(() => {
+      if (token) {
+        GetAllArtists();
+      }
+    }, [token]),
+  );
 
   const handleDetailsScreenNavigate = item => {
     navigation.navigate('HomeDetailsScreen', {item});
@@ -108,7 +109,6 @@ const HomeScreen = () => {
             <TouchableOpacity onPress={() => handleDetailsScreenNavigate(item)}>
               <CustomImage
                 backgroundImage={{uri: item.backgroundImage}}
-                // image={{ uri: item.image }}
                 text={item.text}
                 fullSize={false}
               />

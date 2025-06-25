@@ -1,96 +1,86 @@
-import {io} from 'socket.io-client';
 
-const SOCKET_SERVER_URL = 'https://2a82-103-250-149-229.ngrok-free.app';
 
-const socket = io(SOCKET_SERVER_URL, {
-  autoConnect: false, // Prevent auto-connect; we'll connect manually
-});
+import { io } from 'socket.io-client';
 
-socket.on('connect_error', error => {
-  console.error('Socket connection error:', error.message);
-});
+let socket;
 
-export const connectSocket = () => {
-  if (!socket.connected) {
-    socket.connect(); // Actively connect to the socket
-    socket.on('connect', () => {
-      console.log('Connected to socket');
+export const initiateSocket = userId => {
+  socket = io('https://f19f-103-250-149-229.ngrok-free.app', {
+    transports: ['websocket'],
+  });
+
+  socket.on('connect', () => {
+    console.log('✅ Socket connected');
+    authenticate(userId);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('🔌 Socket disconnected');
+  });
+};
+
+export const authenticate = userId => {
+  if (socket) {
+    socket.emit('authenticate', userId, res => {
+      console.log(res.success ? `🔐 Authenticated as ${userId}` : '❌ Auth failed');
+    });
+  }
+};
+
+export const sendMessage = (payload, callback) => {
+  if (socket?.connected) {
+    console.log('Emitting payload:', payload);
+    socket.emit('sendMessage', payload, response => {
+      callback?.(response);
     });
   } else {
-    console.log('Socket already connected');
+    console.warn('Socket is not connected');
+    callback?.({ success: false, message: 'Socket not connected' });
+  }
+};
+
+export const markAsRead = messageId => {
+  if (socket?.connected) {
+    socket.emit('markAsRead', { messageId });
+  }
+};
+
+export const deleteMessage = messageId => {
+  if (socket?.connected) {
+    socket.emit('deleteMessage', { messageId });
+  }
+};
+
+export const editMessage = ({ messageId, content }) => {
+  if (socket?.connected) {
+    socket.emit('editMessage', { messageId, content });
+  }
+};
+
+export const subscribeToPrivateMessages = callback => {
+  if (socket) {
+    socket.on('message', callback);
+    return socket; // Return socket for cleanup
+  }
+};
+
+export const subscribeToReadStatus = callback => {
+  if (socket) {
+    socket.on('messageRead', callback);
+    return socket; // Return socket for cleanup
+  }
+};
+
+export const subscribeToGroupMessages = callback => {
+  if (socket) {
+    socket.on('groupMessage', callback);
+    return socket; // Return socket for cleanup
   }
 };
 
 export const disconnectSocket = () => {
-  if (socket.connected) {
-    socket.disconnect(); // Actively disconnect the socket
-    socket.on('disconnect', () => {
-      console.log('Disconnected from socket');
-    });
-  } else {
-    console.log('Socket already disconnected');
+  if (socket) {
+    socket.disconnect();
+    socket = null;
   }
 };
-
-export const authenticate = (userId, callback) => {
-  if (!socket.connected) {
-    socket.connect(); // Attempt to connect if not connected
-    socket.on('connect', () => {
-      console.log('Connected to socket');
-      socket.emit('authenticate', userId, response => {
-        if (response && response.success) {
-          console.log('🔐 Authentication successful');
-          callback(response);
-        } else {
-          console.error('Authentication failed:', response?.error);
-          callback(response);
-        }
-      });
-    });
-  } else {
-    socket.emit('authenticate', userId, response => {
-      if (response && response.success) {
-        console.log('🔐 Authentication successful');
-        callback(response);
-      } else {
-        console.error('Authentication failed:', response?.error);
-        callback(response);
-      }
-    });
-  }
-};
-
-export const sendMessage = message => {
-  if (!socket.connected) {
-    socket.connect(); // Attempt to connect if not connected
-    socket.on('connect', () => {
-      console.log('Connected to socket');
-      socket.emit('message', message, response => {
-        // Optional: Handle server acknowledgment
-        if (response && response.status === 'ok') {
-          console.log('Message sent successfully:', message);
-        } else {
-          console.error('Failed to send message:', response?.error);
-        }
-      });
-    });
-  } else {
-    socket.emit('message', message, response => {
-      // Optional: Handle server acknowledgment
-      if (response && response.status === 'ok') {
-        console.log('Message sent successfully:', message);
-      } else {
-        console.error('Failed to send message:', response?.error);
-      }
-    });
-  }
-};
-
-export const onMessage = callback => {
-  socket.on('message', msg => {
-    console.log('Received message:', msg);
-    callback(msg);
-  });
-};
-
-export default socket;
