@@ -75,19 +75,20 @@ export const Profile = async token => {
 
 export const UploadProfilePhoto = async (id, token, formData) => {
   try {
-    const url = `${BASE_URL}/api/users/${id}`;
 
+    const url = `${BASE_URL}/api/users/${id}`;
     const response = await axios.put(url, formData, {
       headers: {
         Authorization: `Bearer ${token}`,
-        // DO NOT manually set 'Content-Type'
-        // Axios will set correct boundaries for multipart/form-data
       },
     });
 
-    return response?.data;
+    return response.data;
   } catch (error) {
-    console.error('Error uploading profile photo:', error?.response?.data || error);
+    console.error(
+      'Error uploading profile photo:',
+      error?.response?.data || error,
+    );
     throw error;
   }
 };

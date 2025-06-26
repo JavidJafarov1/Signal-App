@@ -1,112 +1,192 @@
-// import React, {useEffect, useState} from 'react';
-// import {
-//   StyleSheet,
-//   Text,
-//   View,
-//   FlatList,
-//   TouchableOpacity,
-//   ActivityIndicator,
-// } from 'react-native';
-// import ScreenWrapper from '../../../components/ScreenWrapper';
-// import {AllUsersList} from '../../../utils/Apis/UsersList';
-// import {useAuthToken} from '../../../utils/api';
-// import {useSelector} from 'react-redux';
-// import {Color} from '../../../assets/color/Color';
-
-// const SENDER = {
-//   _id: '683fcd41baca306240f3a5a9',
-//   name: 'Armin van Buuren',
-//   photo: 'https://example.com/images/armin.jpg',
-// };
-
-// const AllUsersListScreen = ({navigation}) => {
-//   const [users, setUsers] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const token = useAuthToken();
-
-//   useEffect(() => {
-//     async function fetchUsers() {
-//       try {
-//         const response = await AllUsersList(token);
-//         const filtered = response.users.filter(user => user._id !== SENDER._id);
-//         setUsers(filtered);
-//       } catch (err) {
-//         console.error('Failed to fetch all users', err);
-//       } finally {
-//         setLoading(false);
-//       }
-//     }
-
-//     fetchUsers();
-//   }, [token]);
-
-//   const renderUserItem = ({item}) => (
-//     <TouchableOpacity
-//       style={styles.userItem}
-//       onPress={() =>
-//         navigation.navigate('ChatScreen', {
-//           user: item,
-//           senderId: SENDER._id,
-//         })
-//       }>
-//       <Text style={styles.userName}>{item.fullName}</Text>
-//     </TouchableOpacity>
-//   );
-
-//   return (
-//     <ScreenWrapper>
-//       <View style={styles.container}>
-//         {loading ? (
-//           <ActivityIndicator size="large" color={Color.blue} />
-//         ) : (
-//           <FlatList
-//             data={users}
-//             keyExtractor={item => item._id}
-//             renderItem={renderUserItem}
-//             ListEmptyComponent={
-//               <Text style={styles.emptyText}>No users found.</Text>
-//             }
-//           />
-//         )}
-//       </View>
-//     </ScreenWrapper>
-//   );
-// };
-
-// export default AllUsersListScreen;
-
-// const styles = StyleSheet.create({
-//   container: {flex: 1, padding: 10},
-//   userItem: {
-//     padding: 15,
-//     borderBottomWidth: 1,
-//     borderBottomColor: '#eee',
-//   },
-//   userName: {
-//     fontSize: 16,
-//     color: Color.white,
-//   },
-//   emptyText: {
-//     textAlign: 'center',
-//     marginTop: 20,
-//     color: Color.white,
-//   },
-// });
-
-import {StyleSheet, Text, View} from 'react-native';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  FlatList,
+  TextInput,
+  ActivityIndicator,
+  Image,
+} from 'react-native';
 import ScreenWrapper from '../../../components/ScreenWrapper';
+import {initiateSocket, disconnectSocket} from '../../../utils/socket';
+import {AllUsersList} from '../../../utils/Apis/UsersList';
+import {useAuthToken} from '../../../utils/api';
+import {useSelector} from 'react-redux';
+import {Color} from '../../../assets/color/Color';
+import Header from '../../../components/Header';
+import useAppHooks from '../../../auth/useAppHooks';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import {setAllUser} from '../../../store/reducer/userReducer';
 
-const AllUsersListScreen = () => {
+export default function ConversationsListScreen() {
+  const {navigation, dispatch} = useAppHooks();
+  const [conversations, setConversations] = useState([]);
+  const [filteredConversations, setFilteredConversations] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const token = useAuthToken();
+
+  const SENDER = useSelector(state => state?.auth?.userDetails);
+  const a = useSelector(state => state?.user?.userList);
+  console.log(a);
+  
+  useEffect(() => {
+    initiateSocket(SENDER.id);
+    return () => disconnectSocket();
+  }, []);
+
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        const response = await AllUsersList(token);
+        const users =
+          response?.users?.filter(user => user._id !== SENDER.id) || [];
+        const convos = users.map(user => ({
+          id: [SENDER.id, user._id].sort().join('_'),
+          participant: user,
+          lastMessage: 'Start chatting!',
+        }));
+        setConversations(convos);
+        dispatch(setAllUser(convos));
+        setFilteredConversations(convos);
+      } catch (err) {
+        console.error('❌ Fetch error:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchUsers();
+  }, [token]);
+
+  const handleSearch = text => {
+    setSearchQuery(text);
+    setFilteredConversations(
+      conversations.filter(
+        convo =>
+          convo.participant?.fullName
+            ?.toLowerCase()
+            .includes(text.toLowerCase()) ||
+          convo.participant?._id.toLowerCase().includes(text.toLowerCase()),
+      ),
+    );
+  };
+
+  const renderConversation = ({item}) => {
+    const avatarUrl = item?.participant?.avatar;
+
+    return (
+      <TouchableOpacity
+        style={styles.conversationItem}
+        onPress={() =>
+          navigation.navigate('ChatScreen', {
+            user: item.participant,
+            senderId: SENDER.id,
+          })
+        }>
+        <View style={styles.avatarPlaceholder}>
+          {avatarUrl ? (
+            <Image source={{uri: avatarUrl}} style={styles.avatarImage} />
+          ) : (
+            <Text style={styles.avatarText}>
+              {item?.participant?.fullName?.charAt(0).toUpperCase() || '?'}
+            </Text>
+          )}
+        </View>
+        <View style={styles.textContainer}>
+          <Text style={styles.conversationName}>
+            {item.participant?.fullName}
+          </Text>
+          <Text style={styles.lastMessage}>{item.lastMessage}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <ScreenWrapper>
-      <View>
-        <Text>AllUsersListScreen</Text>
+      <Header />
+      <View style={styles.container}>
+        <TextInput
+          placeholder="Search users..."
+          style={styles.searchInput}
+          value={searchQuery}
+          onChangeText={handleSearch}
+          placeholderTextColor={Color.white}
+        />
+        <TouchableOpacity
+          style={{flexDirection: 'row'}}
+          onPress={() => navigation.navigate('CreateNewGroupScreen')}>
+          <Ionicons name="add" size={30} color={Color.white} />
+          <Text
+            style={{
+              color: Color?.white,
+              alignSelf: 'center',
+              marginLeft: 10,
+              fontSize: 18,
+            }}>
+            New Group
+          </Text>
+        </TouchableOpacity>
+        {isLoading ? (
+          <ActivityIndicator size="large" color="blue" />
+        ) : (
+          <FlatList
+            data={filteredConversations}
+            keyExtractor={item => item.id}
+            renderItem={renderConversation}
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>No users found.</Text>
+            }
+          />
+        )}
       </View>
     </ScreenWrapper>
   );
-};
+}
 
-export default AllUsersListScreen;
+const styles = StyleSheet.create({
+  container: {flex: 1},
+  searchInput: {
+    height: 40,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    marginVertical: 10,
+    color: Color?.white,
+  },
+  conversationItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    borderBottomWidth: 0.8,
+    borderBottomColor: '#eee',
+  },
+  avatarPlaceholder: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#e0e0e0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  avatarText: {fontSize: 20, fontWeight: 'bold', color: '#555'},
+  textContainer: {flex: 1},
+  conversationName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 2,
+    color: Color.white,
+  },
+  lastMessage: {fontSize: 14, color: Color.white},
+  emptyText: {textAlign: 'center', marginTop: 20, color: Color.white},
 
-const styles = StyleSheet.create({});
+  avatarImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
+});

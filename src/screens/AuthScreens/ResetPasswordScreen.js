@@ -50,7 +50,6 @@ const ResetPasswordScreen = () => {
         email: email,
         password: password,
       });
-      console.log('response', response);
 
       Alert.alert(t('Success'), t('Password_reset_successful'), [
         {

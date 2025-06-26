@@ -11,6 +11,8 @@ import ProgramDetailsScreen from '../screens/UserScreens/ProgramDetailsScreen';
 import ConversationsListScreen from '../screens/UserScreens/ChatFlow/ConversationsListScreen';
 import ChatScreen from '../screens/UserScreens/ChatFlow/ChatScreen';
 import AllUsersListScreen from '../screens/UserScreens/ChatFlow/AllUsersListScreen';
+import CreateNewGroupScreen from '../screens/UserScreens/ChatFlow/CreateNewGroupScreen';
+import EnterGroupNameScreen from '../screens/UserScreens/ChatFlow/EnterGroupNameScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -35,6 +37,8 @@ export const UserStack = () => {
       <Stack.Screen name="ConversationsListScreen" component={ConversationsListScreen} />
       <Stack.Screen name="ChatScreen" component={ChatScreen} />
       <Stack.Screen name="AllUsersListScreen" component={AllUsersListScreen} />
+      <Stack.Screen name="CreateNewGroupScreen" component={CreateNewGroupScreen} />
+      <Stack.Screen name="EnterGroupNameScreen" component={EnterGroupNameScreen} />
     </Stack.Navigator>
   );
 };

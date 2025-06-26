@@ -122,7 +122,7 @@ const HomeScreen = () => {
         <TouchableOpacity
           style={{backgroundColor: 'white', padding: 10}}
           onPress={() => navigation.navigate('ConversationsListScreen')}>
-          <Text style={{alignSelf: 'center'}}>Open Chat</Text>
+          <Text style={{alignSelf: 'center',color:Color?.black}}>Open Chat</Text>
         </TouchableOpacity>
       </View>
     </ScreenWrapper>
