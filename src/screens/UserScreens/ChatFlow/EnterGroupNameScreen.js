@@ -12,11 +12,15 @@ import {useAuthToken} from '../../../utils/api';
 import {Color} from '../../../assets/color/Color';
 import {NewGroup} from '../../../utils/Apis/UsersList';
 import {useNavigation, useRoute} from '@react-navigation/native';
+import useAppHooks from '../../../auth/useAppHooks';
+import Header from '../../../components/Header';
+import {scale} from 'react-native-size-matters';
 
 const EnterGroupNameScreen = () => {
   const [groupName, setGroupName] = useState('');
   const token = useAuthToken();
-  const navigation = useNavigation();
+  const {navigation, t, dispatch} = useAppHooks();
+
   const route = useRoute();
   const {selectedMembers} = route.params;
 
@@ -29,7 +33,6 @@ const EnterGroupNameScreen = () => {
     try {
       const response = await NewGroup(groupName, selectedMembers, token);
       Alert.alert('Success', 'Group created successfully!');
-      // navigation.navigate('ChatScreen', { groupId: response.group._id });
       navigation.navigate('ConversationsListScreen');
     } catch (error) {
       console.error('Group creation error:', error);
@@ -39,7 +42,8 @@ const EnterGroupNameScreen = () => {
 
   return (
     <ScreenWrapper>
-      <View style={{padding: 20}}>
+      <View style={{}}>
+        <Header />
         <TextInput
           placeholder="Enter group name"
           value={groupName}
@@ -60,13 +64,14 @@ export default EnterGroupNameScreen;
 
 const styles = StyleSheet.create({
   input: {
-    height: 45,
     borderColor: '#ccc',
     borderWidth: 1,
     borderRadius: 10,
-    paddingHorizontal: 10,
     marginBottom: 20,
     color: Color.white,
+    padding: scale(10),
+    fontSize: scale(15),
+    fontWeight: '600',
   },
   button: {
     backgroundColor: Color?.blue,
@@ -77,5 +82,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: 'white',
     fontWeight: 'bold',
+    fontSize: scale(15),
   },
 });

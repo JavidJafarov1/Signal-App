@@ -6,71 +6,49 @@ import {
   View,
   FlatList,
   TextInput,
-  ActivityIndicator,
   Image,
 } from 'react-native';
 import ScreenWrapper from '../../../components/ScreenWrapper';
 import {initiateSocket, disconnectSocket} from '../../../utils/socket';
-import {AllUsersList} from '../../../utils/Apis/UsersList';
 import {useAuthToken} from '../../../utils/api';
 import {useSelector} from 'react-redux';
 import {Color} from '../../../assets/color/Color';
 import Header from '../../../components/Header';
 import useAppHooks from '../../../auth/useAppHooks';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import {setAllUser} from '../../../store/reducer/userReducer';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import {scale, verticalScale} from 'react-native-size-matters';
 
 export default function ConversationsListScreen() {
-  const {navigation, dispatch} = useAppHooks();
-  const [conversations, setConversations] = useState([]);
-  const [filteredConversations, setFilteredConversations] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const {navigation} = useAppHooks();
   const token = useAuthToken();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredList, setFilteredList] = useState([]);
 
   const SENDER = useSelector(state => state?.auth?.userDetails);
-  const a = useSelector(state => state?.user?.userList);
-  console.log(a);
-  
-  useEffect(() => {
-    initiateSocket(SENDER.id);
-    return () => disconnectSocket();
-  }, []);
+  const userList = useSelector(state => state?.user?.userList);
 
   useEffect(() => {
-    async function fetchUsers() {
-      try {
-        const response = await AllUsersList(token);
-        const users =
-          response?.users?.filter(user => user._id !== SENDER.id) || [];
-        const convos = users.map(user => ({
-          id: [SENDER.id, user._id].sort().join('_'),
-          participant: user,
-          lastMessage: 'Start chatting!',
-        }));
-        setConversations(convos);
-        dispatch(setAllUser(convos));
-        setFilteredConversations(convos);
-      } catch (err) {
-        console.error('❌ Fetch error:', err);
-      } finally {
-        setIsLoading(false);
-      }
+    if (SENDER?.id) {
+      initiateSocket(SENDER.id);
     }
-    fetchUsers();
-  }, [token]);
+    return () => disconnectSocket();
+  }, [SENDER?.id]);
+
+  useEffect(() => {
+    if (!searchQuery) {
+      setFilteredList(userList || []);
+    } else {
+      const filtered = (userList || []).filter(item =>
+        item?.participant?.fullName
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase()),
+      );
+      setFilteredList(filtered);
+    }
+  }, [searchQuery, userList]);
 
   const handleSearch = text => {
     setSearchQuery(text);
-    setFilteredConversations(
-      conversations.filter(
-        convo =>
-          convo.participant?.fullName
-            ?.toLowerCase()
-            .includes(text.toLowerCase()) ||
-          convo.participant?._id.toLowerCase().includes(text.toLowerCase()),
-      ),
-    );
   };
 
   const renderConversation = ({item}) => {
@@ -82,7 +60,9 @@ export default function ConversationsListScreen() {
         onPress={() =>
           navigation.navigate('ChatScreen', {
             user: item.participant,
-            senderId: SENDER.id,
+            senderId: item.id
+              .split('_')
+              .find(id => id !== item.participant._id),
           })
         }>
         <View style={styles.avatarPlaceholder}>
@@ -98,7 +78,7 @@ export default function ConversationsListScreen() {
           <Text style={styles.conversationName}>
             {item.participant?.fullName}
           </Text>
-          <Text style={styles.lastMessage}>{item.lastMessage}</Text>
+          <Text style={styles.lastMessage}>Start chatting!</Text>
         </View>
       </TouchableOpacity>
     );
@@ -115,32 +95,29 @@ export default function ConversationsListScreen() {
           onChangeText={handleSearch}
           placeholderTextColor={Color.white}
         />
+
         <TouchableOpacity
-          style={{flexDirection: 'row'}}
+          style={styles.newGroupBtn}
           onPress={() => navigation.navigate('CreateNewGroupScreen')}>
-          <Ionicons name="add" size={30} color={Color.white} />
-          <Text
+          <View
             style={{
-              color: Color?.white,
-              alignSelf: 'center',
-              marginLeft: 10,
-              fontSize: 18,
+              backgroundColor: Color?.white,
+              padding: 5,
+              borderRadius: 30,
             }}>
-            New Group
-          </Text>
+            <MaterialIcons name="group" size={22} color={Color.black} />
+          </View>
+          <Text style={styles.newGroupText}>New Group</Text>
         </TouchableOpacity>
-        {isLoading ? (
-          <ActivityIndicator size="large" color="blue" />
-        ) : (
-          <FlatList
-            data={filteredConversations}
-            keyExtractor={item => item.id}
-            renderItem={renderConversation}
-            ListEmptyComponent={
-              <Text style={styles.emptyText}>No users found.</Text>
-            }
-          />
-        )}
+        <Text style={styles.contactTxt}>All Contacts</Text>
+        <FlatList
+          data={filteredList}
+          keyExtractor={item => item.id}
+          renderItem={renderConversation}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>No users found.</Text>
+          }
+        />
       </View>
     </ScreenWrapper>
   );
@@ -149,44 +126,71 @@ export default function ConversationsListScreen() {
 const styles = StyleSheet.create({
   container: {flex: 1},
   searchInput: {
-    height: 40,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: Color.white,
     borderRadius: 8,
-    paddingHorizontal: 10,
-    marginVertical: 10,
-    color: Color?.white,
+    color: Color.white,
+    padding: scale(10),
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  newGroupBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: scale(15),
+  },
+  newGroupText: {
+    color: Color.white,
+    fontSize: scale(18),
+    marginLeft: 10,
+    fontWeight: '600',
   },
   conversationItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 15,
-    borderBottomWidth: 0.8,
-    borderBottomColor: '#eee',
+    paddingVertical: verticalScale(8),
   },
   avatarPlaceholder: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: 'gray',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
   },
-  avatarText: {fontSize: 20, fontWeight: 'bold', color: '#555'},
-  textContainer: {flex: 1},
-  conversationName: {
-    fontSize: 16,
+  avatarText: {
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 2,
-    color: Color.white,
+    color: '#fff',
   },
-  lastMessage: {fontSize: 14, color: Color.white},
-  emptyText: {textAlign: 'center', marginTop: 20, color: Color.white},
-
   avatarImage: {
     width: 50,
     height: 50,
     borderRadius: 25,
+  },
+  textContainer: {
+    marginLeft: 15,
+    flex: 1,
+  },
+  conversationName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: Color.white,
+  },
+  lastMessage: {
+    fontSize: 14,
+    color: Color.white,
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 30,
+    fontSize: 16,
+    color: Color.white,
+  },
+  contactTxt: {
+    color: Color?.lightGray,
+    fontSize: scale(18),
+    fontWeight: '600',
+    marginTop: scale(10),
   },
 });

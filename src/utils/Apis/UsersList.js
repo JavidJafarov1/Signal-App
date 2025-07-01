@@ -31,6 +31,7 @@ export const GetConversationList = async token => {
       },
     });
 
+    
     return response?.data;
   } catch (error) {
     console.error(
@@ -49,16 +50,19 @@ export const ChatHistory = async ({
 }) => {
   try {
     let url = `${BASE_URL}/api/chat/messages?type=${type}`;
+
     if (type === 'private' && userId) {
       url += `&userId=${userId}`;
     } else if (type === 'group' && groupId) {
       url += `&groupId=${groupId}`;
     }
+
     const response = await axios.get(url, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
+
     return response?.data;
   } catch (error) {
     console.error('Error fetching messages:', error?.response?.data || error);
@@ -122,12 +126,11 @@ export const AddMember = async (groupId, memberIds, token) => {
   }
 };
 
-export const RemoveMember = async (id, token) => {
+export const RemoveMember = async (groupId, userId, token) => {
   try {
-    const url = `${BASE_URL}/api/groups/remove-member/${id}`;
-    const body = {
-      userId: userId,
-    };
+    const url = `${BASE_URL}/api/groups/remove-member/${groupId}`;
+    const body = {userId: userId};
+
     const response = await axios.put(url, body, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -136,10 +139,7 @@ export const RemoveMember = async (id, token) => {
 
     return response.data;
   } catch (error) {
-    console.error(
-      'Error uploading profile photo:',
-      error?.response?.data || error,
-    );
+    console.error('Error removing member:', error?.response?.data || error);
     throw error;
   }
 };

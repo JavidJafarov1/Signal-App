@@ -12,6 +12,8 @@ import ScreenWrapper from '../../../components/ScreenWrapper';
 import {useSelector} from 'react-redux';
 import {Color} from '../../../assets/color/Color';
 import {useNavigation} from '@react-navigation/native';
+import Header from '../../../components/Header';
+import {scale, verticalScale} from 'react-native-size-matters';
 
 const CreateNewGroupScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -76,7 +78,8 @@ const CreateNewGroupScreen = () => {
 
   return (
     <ScreenWrapper>
-      <View style={{flex: 1, padding: 15}}>
+      <View style={{flex: 1}}>
+        <Header />
         <TextInput
           placeholder="Search users..."
           style={styles.searchInput}
@@ -84,6 +87,7 @@ const CreateNewGroupScreen = () => {
           onChangeText={setSearchQuery}
           placeholderTextColor={Color.white}
         />
+        <Text style={styles.contactTxt}>All Contacts</Text>
 
         <View style={{flex: 1}}>
           <FlatList
@@ -108,22 +112,19 @@ export default CreateNewGroupScreen;
 
 const styles = StyleSheet.create({
   searchInput: {
-    height: 40,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
-    paddingHorizontal: 10,
-    marginVertical: 10,
     color: Color.white,
+    padding: scale(10),
+    fontWeight: '600',
+    fontSize: 18,
   },
   conversationItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 15,
-    borderBottomWidth: 0.8,
-    borderBottomColor: '#eee',
+    paddingVertical: verticalScale(8),
     borderRadius: 8,
-    marginBottom: 5,
   },
   avatarPlaceholder: {
     width: 50,
@@ -165,5 +166,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
     fontWeight: 'bold',
+  },
+  contactTxt: {
+    color: Color?.lightGray,
+    fontSize: scale(18),
+    fontWeight: '600',
+    marginTop: scale(15),
   },
 });
