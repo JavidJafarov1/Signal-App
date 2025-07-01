@@ -11,7 +11,7 @@ import ScreenWrapper from '../../../components/ScreenWrapper';
 import {useAuthToken} from '../../../utils/api';
 import {Color} from '../../../assets/color/Color';
 import {NewGroup} from '../../../utils/Apis/UsersList';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import { useRoute} from '@react-navigation/native';
 import useAppHooks from '../../../auth/useAppHooks';
 import Header from '../../../components/Header';
 import {scale} from 'react-native-size-matters';

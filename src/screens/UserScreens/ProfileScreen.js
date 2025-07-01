@@ -32,8 +32,8 @@ const ProfileScreen = () => {
     setLoadingProfile(true);
     try {
       const response = await Profile(token);
-      setProfileData(response); // Make sure response contains `user`
-      setImageLoaded(false); // Reset image loader to show new avatar loading
+      setProfileData(response);
+      setImageLoaded(false);
     } catch (error) {
       console.error('Error fetching profile:', error);
       Alert.alert('Error', 'Failed to load profile');
@@ -64,12 +64,12 @@ const ProfileScreen = () => {
       setUploadingImage(true);
       try {
         const updatedData = await UploadProfilePhoto(
-          profileData?.user?.id,
+          profileData?.id,
           token,
           formData,
         );
 
-        setProfileData(updatedData); // updatedData should contain user object
+        setProfileData(updatedData);
         Alert.alert('Success', 'Profile image updated');
         setImageLoaded(false);
       } catch (err) {
@@ -103,7 +103,11 @@ const ProfileScreen = () => {
         <View style={styles.profileContainer}>
           <View style={styles.profileIcon}>
             {(uploadingImage || !imageLoaded) && (
-              <ActivityIndicator size={'small'} color={Color.white} style={styles.imageLoader} />
+              <ActivityIndicator
+                size={'small'}
+                color={Color.white}
+                style={styles.imageLoader}
+              />
             )}
             <Image
               style={styles.avatarImage}
@@ -144,8 +148,6 @@ const styles = StyleSheet.create({
   profileContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: verticalScale(45),
-    paddingHorizontal: scale(20),
   },
   profileIcon: {
     width: scale(80),
@@ -182,7 +184,6 @@ const styles = StyleSheet.create({
     paddingVertical: verticalScale(10),
     alignItems: 'center',
     marginBottom: verticalScale(20),
-    marginHorizontal: scale(20),
     borderRadius: 10,
   },
   loaderContainer: {
@@ -190,4 +191,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  detailsTxt:{
+    color:Color?.white
+  }
 });
+
+

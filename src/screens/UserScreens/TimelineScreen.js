@@ -696,7 +696,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#333',
   },
   headerButtonText: {
-    color: '#fff',
+    color: Color?.white,
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -704,7 +704,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   dateText: {
-    color: '#fff',
+    color: Color?.white,
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -745,7 +745,7 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
   },
   hourText: {
-    color: '#fff',
+    color: Color?.white,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -765,7 +765,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#444',
   },
   stageLabel: {
-    color: '#fff',
+    color: Color?.white,
     fontSize: 14,
     fontWeight: 'bold',
     transform: [{rotate: '-90deg'}],
@@ -799,7 +799,7 @@ const styles = StyleSheet.create({
     borderLeftColor: '#888',
   },
   eventName: {
-    color: '#fff',
+    color: Color?.white,
     fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 2,

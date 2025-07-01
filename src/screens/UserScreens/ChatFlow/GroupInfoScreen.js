@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -9,9 +9,11 @@ import {
   Modal,
   Pressable,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import {
   AddMember,
+  GetAllGroup,
   leaveGroup,
   RemoveMember,
 } from '../../../utils/Apis/UsersList';
@@ -22,18 +24,63 @@ import {Color} from '../../../assets/color/Color';
 import Header from '../../../components/Header';
 import {scale} from 'react-native-size-matters';
 import useAppHooks from '../../../auth/useAppHooks';
+import {setGroupDetails} from '../../../store/reducer/userReducer';
 
 export default function GroupInfoScreen({route}) {
-  const {navigation} = useAppHooks();
-  const {groupId, members: initialMembers = []} = route.params;
+  const {navigation, dispatch} = useAppHooks();
+  const {groupId} = route.params;
 
-  const [members, setMembers] = useState(initialMembers?.members || []);
+  const [members, setMembers] = useState([]);
   const [selectModalVisible, setSelectModalVisible] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const token = useAuthToken();
   const userList = useSelector(state => state?.user?.userList || []);
+
+  const groupsFromRedux = useSelector(state => state?.user?.groupList || []);
+
+  console.log('groupsFromRedux', groupsFromRedux[0]?.members)
+
   const memberIds = members.map(member => member._id);
+  const currentGroup = groupsFromRedux.find(group => group._id === groupId);
+  const creatorId = currentGroup?.createdBy?._id;
+  const currentUserId = useSelector(state => state?.auth?.userDetails?.id);
+  const isCreator = creatorId === currentUserId;
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchGroupDetails(); 
+    setRefreshing(false);
+  };
+
+  useEffect(() => {
+    const currentGroup = groupsFromRedux.find(group => group._id === groupId);
+    if (currentGroup?.members) {
+      setMembers(currentGroup.members);
+    } else {
+      fetchGroupDetails();
+    }
+  }, [groupId, groupsFromRedux]);
+
+  const fetchGroupDetails = async () => {
+    setIsLoading(true);
+    try {
+      const response = await GetAllGroup(token);
+      const currentGroup = response?.groups?.find(
+        group => group._id === groupId,
+      );
+      if (currentGroup?.members) {
+        setMembers(currentGroup.members);
+      }
+    } catch (error) {
+      console.error('Error fetching group details:', error);
+      Alert.alert('Error', 'Could not load group members');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   function AvatarDisplay({name, avatar}) {
     return (
@@ -65,30 +112,64 @@ export default function GroupInfoScreen({route}) {
   };
 
   const handleAddMember = async () => {
+    if (selectedUsers.length === 0) {
+      Alert.alert(
+        'No Users Selected',
+        'Please select at least one user to add.',
+      );
+      return;
+    }
+
     try {
       const res = await AddMember(groupId, selectedUsers, token);
+
       if (res.success) {
         const newlyAddedUsers = userList
           .map(item => item?.participant || item)
           .filter(user => selectedUsers.includes(user._id));
 
         setMembers(prev => [...prev, ...newlyAddedUsers]);
+
+        const updatedGroupsInRedux = groupsFromRedux.map(group => {
+          if (group._id === groupId) {
+            return {
+              ...group,
+              members: [...group.members, ...newlyAddedUsers],
+            };
+          }
+          return group;
+        });
+
+        dispatch(setGroupDetails(updatedGroupsInRedux));
+
         setSelectedUsers([]);
         setSelectModalVisible(false);
         Alert.alert('Success', 'Member added');
       } else {
-        Alert.alert('Failed', 'Could not add member(s)');
+        Alert.alert('Failed', 'Could not add member(s)', [
+          {
+            text: 'OK',
+            onPress: () => setSelectModalVisible(false),
+          },
+        ]);
       }
     } catch (err) {
       console.error(err);
-      Alert.alert('Error', 'Only creator can add members');
+      Alert.alert('Error', 'Only creator can add members', [
+        {
+          text: 'OK',
+          onPress: () => setSelectModalVisible(false),
+        },
+      ]);
     }
   };
 
   const handleRemoveMember = member => {
     Alert.alert(
       'Remove Member',
-      `Are you sure you want to remove ${member?.firstName} ${member?.lastName}?`,
+      `Are you sure you want to remove ${
+        member?.firstName || member?.fullName
+      } ${member?.lastName || ''}?`,
       [
         {text: 'Cancel', style: 'cancel'},
         {
@@ -99,6 +180,18 @@ export default function GroupInfoScreen({route}) {
               const res = await RemoveMember(groupId, member._id, token);
               if (res.success) {
                 setMembers(prev => prev.filter(m => m._id !== member._id));
+
+                const updatedGroupsInRedux = groupsFromRedux.map(group => {
+                  if (group._id === groupId) {
+                    return {
+                      ...group,
+                      members: group.members.filter(m => m._id !== member._id),
+                    };
+                  }
+                  return group;
+                });
+                dispatch(setGroupDetails(updatedGroupsInRedux));
+
                 Alert.alert('Removed', 'Member removed successfully');
               } else {
                 Alert.alert('Failed', 'Could not remove member');
@@ -118,9 +211,14 @@ export default function GroupInfoScreen({route}) {
     <TouchableOpacity
       style={styles.memberItem}
       onPress={() => handleRemoveMember(item)}>
-      <AvatarDisplay name={item.firstName} avatar={item.avatar} />
+      <AvatarDisplay
+        name={item.firstName || item.fullName}
+        avatar={item.avatar}
+      />
+      {console.log('item', item)}
       <Text style={styles.memberText}>
-        {item?.firstName || 'undefined'} {item?.lastName || 'undefined'}
+        {item?.firstName || item?.fullName || 'undefined'}{' '}
+        {item?.lastName || ''}
       </Text>
     </TouchableOpacity>
   );
@@ -148,11 +246,23 @@ export default function GroupInfoScreen({route}) {
         ]}>
         <AvatarDisplay name={user?.fullName} avatar={user?.avatar} />
         <Text style={styles.userText}>
-          {user?.firstName || 'undefined'} {user?.lastName || 'undefined'}
+          {user?.firstName || user?.fullName || 'undefined'}{' '}
+          {user?.lastName || ''}
         </Text>
       </Pressable>
     );
   };
+
+  if (isLoading) {
+    return (
+      <ScreenWrapper>
+        <View style={styles.container}>
+          <Header />
+          <ActivityIndicator size="large" color={Color?.blue} />
+        </View>
+      </ScreenWrapper>
+    );
+  }
 
   return (
     <ScreenWrapper>
@@ -162,20 +272,30 @@ export default function GroupInfoScreen({route}) {
           data={members}
           keyExtractor={item => item._id}
           renderItem={renderMemberItem}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
           ListHeaderComponent={
-            <Text style={styles.title}>No Group Members</Text>
+            <Text style={styles.title}>Group Members ({members.length})</Text>
+          }
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>No members found</Text>
           }
         />
 
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => setSelectModalVisible(true)}>
-          <Text style={styles.addText}>Add Member</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.leaveButton} onPress={handleLeaveGroup}>
-          <Text style={{color: Color?.white}}>Leave Group</Text>
-        </TouchableOpacity>
+        {isCreator && (
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => setSelectModalVisible(true)}>
+            <Text style={styles.addText}>Add Member</Text>
+          </TouchableOpacity>
+        )}
+        {!isCreator && (
+          <TouchableOpacity
+            style={styles.leaveButton}
+            onPress={handleLeaveGroup}>
+            <Text style={{color: Color?.white}}>Leave Group</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {renderAddMemberModal()}
@@ -194,7 +314,7 @@ export default function GroupInfoScreen({route}) {
             <Text style={styles.modalTitle}>Select Users to Add</Text>
             <FlatList
               data={userList}
-              keyExtractor={item => item._id}
+              keyExtractor={item => item._id || item.id}
               renderItem={renderUserItem}
             />
             <View style={styles.modalButtons}>
@@ -213,10 +333,12 @@ export default function GroupInfoScreen({route}) {
 }
 
 const styles = StyleSheet.create({
-  container: {flex: 1},
+  container: {
+    flex: 1,
+  },
   title: {
-    fontSize: 20,
-    color: '#fff',
+    fontSize: scale(18),
+    color: Color?.white,
     marginBottom: 10,
     fontWeight: 'bold',
   },
@@ -226,9 +348,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   memberText: {
-    color: '#fff',
-    fontSize: 16,
+    color: Color?.white,
+    fontSize: scale(17),
     marginLeft: scale(10),
+    fontWeight: '600',
   },
   addButton: {
     marginTop: 20,
@@ -262,7 +385,7 @@ const styles = StyleSheet.create({
     maxHeight: '80%',
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: scale(18),
     color: 'white',
     marginBottom: 10,
     fontWeight: 'bold',
@@ -283,7 +406,7 @@ const styles = StyleSheet.create({
   },
   userText: {
     color: Color?.white,
-    fontSize: 15,
+    fontSize: scale(17),
     marginLeft: 10,
   },
   modalButtons: {
@@ -293,12 +416,13 @@ const styles = StyleSheet.create({
   },
   cancelText: {
     color: 'red',
-    fontSize: 16,
+    fontSize: scale(18),
+    fontWeight: '600',
   },
   addmemberTxt: {
     color: '#1e88e5',
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: scale(18),
+    fontWeight: '600',
   },
   avatarPlaceholder: {
     width: 50,
@@ -311,7 +435,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#fff',
+    color: Color?.white,
   },
   avatarImage: {
     width: 50,

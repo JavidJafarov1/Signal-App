@@ -124,7 +124,8 @@ export default function ConversationsListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {flex: 1},
+  container: {
+    flex: 1},
   searchInput: {
     borderWidth: 1,
     borderColor: Color.white,
@@ -161,7 +162,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#fff',
+    color: Color?.white,
   },
   avatarImage: {
     width: 50,

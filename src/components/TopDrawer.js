@@ -43,7 +43,7 @@ const TopDrawer = ({visible, onClose}) => {
     {id: 2, title: 'Программа', onPress: 'ProgramScreen'},
     {id: 3, title: 'Карта', onPress: 'MapScreen'},
     {id: 4, title: 'Signal Live', onPress: 'SignalLiveScreen'},
-    {id: 5, title: 'Chat', onPress: 'ConversationsListScreen'},
+    {id: 5, title: 'Чат', onPress: 'ConversationsListScreen'},
     {id: 6, title: 'Партнеры', onPress: 'PartnersScreen'},
   ];
 

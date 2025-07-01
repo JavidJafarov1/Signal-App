@@ -140,7 +140,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#263238',
   },
-  textContainer: {flex: 1},
+  textContainer: {
+    flex: 1,
+  },
   conversationName: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -163,7 +165,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   buttonText: {
-    color: '#fff',
+    color: Color?.white,
     textAlign: 'center',
     fontWeight: 'bold',
   },

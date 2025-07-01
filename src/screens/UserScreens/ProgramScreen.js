@@ -5,6 +5,7 @@ import CustomImage from '../../components/ImageComponent';
 import {useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import ScreenWrapper from '../../components/ScreenWrapper';
+import {Color} from '../../assets/color/Color';
 
 const images = [
   {
@@ -227,11 +228,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   searchText: {
-    color: '#000',
+    color: Color?.black,
   },
   clearButton: {
     fontSize: 16,
-    color: '#000',
+    color: Color?.black,
   },
   boxRow: {
     flexDirection: 'row',

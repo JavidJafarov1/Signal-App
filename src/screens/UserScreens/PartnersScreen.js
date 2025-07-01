@@ -11,6 +11,7 @@ import Icon from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Header from '../../components/Header';
 import ScreenWrapper from '../../components/ScreenWrapper';
+import { Color } from '../../assets/color/Color';
 
 const items = [
   {name: 'Билайн', icon: 'numeric-6-circle-outline'},
@@ -31,7 +32,11 @@ const PartnersScreen = () => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {items.map((item, index) => (
           <View key={index} style={styles.itemCard}>
-            <MaterialCommunityIcons name={item.icon} size={40} color="#fff" />
+            <MaterialCommunityIcons
+              name={item.icon}
+              size={40}
+              color={Color?.white}
+            />
             <Text style={styles.itemText}>{item.name}</Text>
           </View>
         ))}
@@ -50,12 +55,12 @@ const styles = StyleSheet.create({
   },
   bankText: {
     fontSize: 22,
-    color: '#fff',
+    color: Color?.white,
     fontWeight: 'bold',
     marginLeft: 10,
   },
   partnerText: {
-    color: '#fff',
+    color: Color?.white,
     fontSize: 14,
     textAlign: 'center',
     marginVertical: 10,
@@ -70,7 +75,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   itemText: {
-    color: '#fff',
+    color: Color?.white,
     marginTop: 10,
     fontSize: 16,
   },

@@ -25,7 +25,7 @@ import Header from '../../../components/Header';
 import useAppHooks from '../../../auth/useAppHooks';
 import {scale, verticalScale} from 'react-native-size-matters';
 import {useFocusEffect} from '@react-navigation/native';
-import {setAllUser} from '../../../store/reducer/userReducer';
+import {setAllUser, setGroupDetails} from '../../../store/reducer/userReducer';
 
 export default function ConversationsListScreen() {
   const {navigation, t, dispatch} = useAppHooks();
@@ -82,16 +82,19 @@ export default function ConversationsListScreen() {
     fetchUsers();
     GetGroups();
   }, [token]);
+
   const fetchConversations = async () => {
     setIsLoading(true);
     try {
-      const [privateResponse, groupResponse] = await Promise.all([
+      const [conversationResponse, groupResponse] = await Promise.all([
         GetConversationList(token),
         GetAllGroup(token),
       ]);
 
-      const {privateChats = []} = privateResponse || {};
+      const {privateChats = [], groupChats = []} = conversationResponse || {};
       const {groups = []} = groupResponse || {};
+
+      dispatch(setGroupDetails(groups));
 
       const privateConvos = privateChats.map(chat => ({
         id: chat._id,
@@ -105,22 +108,29 @@ export default function ConversationsListScreen() {
         unreadCount: chat?.unreadCount || 0,
       }));
 
-      const groupConvos = groups.map(group => ({
-        id: group._id,
-        type: 'group',
-        participant: {
-          fullName: group.name,
-          _id: group._id,
-        },
-        members: group.members || [],
-        fullGroup: group,
-        lastMessage: group?.lastMessage?.text || 'Start chatting!',
-        unreadCount: group?.unreadCount || 0,
-      }));
+      const groupConvos = groupChats.map(groupChat => {
+        const detailedGroup = groups.find(g => g._id === groupChat._id);
+        return {
+          id: groupChat._id,
+          type: 'group',
+          participant: {
+            fullName: groupChat.name,
+            _id: groupChat._id,
+          },
+          members: detailedGroup?.members || [],
+          fullGroup: detailedGroup,
+          lastMessage: groupChat?.lastMessage?.text || 'Start chatting!',
+          unreadCount: groupChat?.unreadCount || 0,
+        };
+      });
+
       const allConversations = [...groupConvos, ...privateConvos];
 
       setConversations(allConversations);
       setFilteredConversations(allConversations);
+
+      setGroupData(groupConvos);
+
       setIsLoading(false);
     } catch (err) {
       console.error('Conversation fetch error:', err);
@@ -132,18 +142,27 @@ export default function ConversationsListScreen() {
   const GetGroups = async () => {
     try {
       const updatedData = await GetAllGroup(token);
-      const groups =
-        updatedData?.groups?.map(group => ({
-          id: group._id,
-          type: 'group',
-          participant: {
-            fullName: group.name,
-            _id: group._id,
-          },
-          lastMessage: 'Start chatting!',
-        })) || [];
+      const groups = updatedData?.groups || [];
+      console.log('groups', groups);
 
-      setGroupData(groups);
+      dispatch(setGroupDetails(groups));
+
+      const groupConversations = groups.map(group => ({
+        id: group._id,
+        type: 'group',
+        participant: {
+          fullName: group.name,
+          _id: group._id,
+        },
+        members: group.members || [],
+        fullGroup: group,
+        lastMessage: 'Start chatting!',
+        unreadCount: 0,
+      }));
+
+      if (groupData.length === 0) {
+        setGroupData(groupConversations);
+      }
     } catch (err) {
       console.error('Group fetch error:', err?.response?.data || err);
       Alert.alert('Error', 'Could not load group data');
@@ -157,8 +176,11 @@ export default function ConversationsListScreen() {
 
   const showGroupChats = () => {
     setActiveTab('group');
-    const onlyGroups = conversations.filter(convo => convo.type === 'group');
-    setGroupData(onlyGroups);
+
+    const groupsFromConversations = conversations.filter(
+      convo => convo.type === 'group',
+    );
+    setFilteredConversations(groupsFromConversations);
   };
 
   const handleSearch = text => {
@@ -187,8 +209,13 @@ export default function ConversationsListScreen() {
   const handleAvatarLoadEnd = id => {
     setAvatarLoading(prev => ({...prev, [id]: false}));
   };
+
   const renderConversation = ({item}) => {
-    const avatarUrl = item?.participant?.avatar;
+    const isGroup = item.type === 'group';
+    const avatarUrl = isGroup
+      ? item.fullGroup?.groupIcone
+      : item.participant?.avatar;
+
     const hasUnread = item?.unreadCount > 0;
 
     return (
@@ -199,9 +226,9 @@ export default function ConversationsListScreen() {
             user: item.participant,
             senderId: SENDER.id,
             chatType: item.type,
-            groupId: item.type === 'group' ? item.id : null,
-            members: item.type === 'group' ? item.members : undefined,
-            fullGroup: item.type === 'group' ? item.fullGroup : undefined,
+            groupId: isGroup ? item.id : null,
+            members: isGroup ? item.members : undefined,
+            fullGroup: isGroup ? item.fullGroup : undefined,
           })
         }>
         <View style={styles.avatarWrapper}>
@@ -264,6 +291,7 @@ export default function ConversationsListScreen() {
             flexDirection: 'row',
             justifyContent: 'space-between',
             width: '100%',
+            marginTop: scale(10),
           }}>
           <TouchableOpacity
             style={[
@@ -300,7 +328,7 @@ export default function ConversationsListScreen() {
               <Text style={styles?.chatTxt}>Group Chats</Text>
             )}
             <FlatList
-              data={activeTab === 'all' ? filteredConversations : groupData}
+              data={filteredConversations}
               keyExtractor={item => item.id}
               renderItem={renderConversation}
               refreshing={refreshing}
@@ -332,25 +360,10 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 8,
     paddingHorizontal: 10,
-    marginVertical: 10,
     color: Color.white,
     fontSize: 18,
     fontWeight: '600',
     padding: scale(10),
-  },
-  conversationItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: verticalScale(8),
-    marginTop: scale(8),
-  },
-  avatarPlaceholder: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
   },
   avatarWrapper: {
     width: 50,
@@ -379,10 +392,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#555',
-  },
-  textContainer: {
-    flex: 1,
-    left: scale(10),
   },
   conversationName: {
     fontSize: 16,
@@ -414,6 +423,7 @@ const styles = StyleSheet.create({
     color: Color.white,
     fontWeight: '600',
     fontSize: 25,
+    paddingVertical: 10,
   },
   tabbarTxt: {
     color: Color.white,
@@ -457,3 +467,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+

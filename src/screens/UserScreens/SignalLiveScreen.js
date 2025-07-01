@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     paddingBottom: verticalScale(10),
   },
   linkText: {
-    color: '#fff',
+    color: Color?.white,
     fontSize: scale(18),
     marginLeft: scale(15),
   },
