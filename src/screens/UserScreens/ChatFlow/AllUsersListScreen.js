@@ -101,11 +101,11 @@ export default function ConversationsListScreen() {
           onPress={() => navigation.navigate('CreateNewGroupScreen')}>
           <View
             style={{
-              backgroundColor: Color?.white,
-              padding: 5,
-              borderRadius: 30,
+              backgroundColor: Color?.blue,
+              padding: scale(7),
+              borderRadius: 50,
             }}>
-            <MaterialIcons name="group" size={22} color={Color.black} />
+            <MaterialIcons name="group" size={22} color={Color.white} />
           </View>
           <Text style={styles.newGroupText}>New Group</Text>
         </TouchableOpacity>
@@ -125,7 +125,8 @@ export default function ConversationsListScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1},
+    flex: 1,
+  },
   searchInput: {
     borderWidth: 1,
     borderColor: Color.white,

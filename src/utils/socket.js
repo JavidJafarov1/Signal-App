@@ -1,11 +1,11 @@
 import {io} from 'socket.io-client';
+import {BASE_URL} from './api';
+import axios from 'axios';
 
 let socket;
 
 export const initiateSocket = userId => {
-  socket = io('https://2cd7-103-250-149-229.ngrok-free.app', {
-    transports: ['websocket'],
-  });
+  socket = io(BASE_URL.replace('/api', ''), {transports: ['websocket']});
 
   socket.on('connect', () => {
     console.log('✅ Socket connected');
@@ -17,15 +17,33 @@ export const initiateSocket = userId => {
   });
 };
 
-export const authenticate = userId => {
-  if (socket) {
-    socket.emit('authenticate', userId, res => {
-      console.log(
-        res.success ? `🔐 Authenticated as ${userId}` : '❌ Auth failed',
-      );
+const authenticate = userId => {
+  socket?.emit('authenticate', userId, res => {
+    console.log(
+      res.success ? `🔐 Authenticated as ${userId}` : '❌ Auth failed',
+    );
+  });
+};
+
+export const uploadFile = async (file, token) => {
+  try {
+    const body = new FormData();
+    body.append('file', {
+      uri: file.uri,
+      name: file.name,
+      type: file.type,
     });
+
+    const response = await axios.post(`${BASE_URL}/api/upload`, body, {
+      headers: {Authorization: `Bearer ${token}`},
+    });
+
+    return response?.data;
+  } catch (error) {
+    throw error;
   }
 };
+
 export const sendMessage = (payload, callback) => {
   if (!socket?.connected) {
     return callback?.({success: false, message: 'Socket not connected'});
@@ -49,7 +67,7 @@ export const sendMessage = (payload, callback) => {
     : 'text';
   console.log('mediaType', mediaType, messageType);
 
-  const finalContent = hasMedia ? '[Media]' : content.trim();
+  const finalContent = hasMedia ? '' : content.trim();
 
   socket.emit(
     'sendMessage',
@@ -70,81 +88,31 @@ export const sendMessage = (payload, callback) => {
   );
 };
 
-// export const sendMessage = (payload, callback) => {
-//   if (!socket?.connected) {
-//     return callback?.({success: false, message: 'Socket not connected'});
-//   }
-
-//   const media = payload.media || {};
-//   const isMedia = Boolean(media.uri);
-//   const mediaType = media.type || '';
-
-//   const type = isMedia
-//     ? mediaType.startsWith('image/')
-//       ? 'image'
-//       : 'file'
-//     : 'text';
-
-//   const messagePayload = {
-//     ...payload,
-//     type,
-//     content: isMedia ? '[Media]' : (payload.content || '').trim(),
-//     media: isMedia
-//       ? {
-//           uri: media.uri,
-//           type: mediaType,
-//           name: media.name || `media.${mediaType.split('/')[1] || 'jpg'}`,
-//         }
-//       : undefined,
-//   };
-
-//   socket.emit('sendMessage', messagePayload, response => {
-//     callback?.(response);
-//   });
-// };
-
 export const markAsRead = messageId => {
-  if (socket?.connected) {
-    socket.emit('markAsRead', {messageId});
-  }
+  socket?.emit('markAsRead', {messageId});
 };
 
 export const deleteMessage = messageId => {
-  if (socket?.connected) {
-    socket.emit('deleteMessage', {messageId});
-  }
+  socket?.emit('deleteMessage', {messageId});
 };
 
 export const editMessage = ({messageId, content}) => {
-  if (socket?.connected) {
-    socket.emit('editMessage', {messageId, content});
-  }
+  socket?.emit('editMessage', {messageId, content});
 };
 
 export const subscribeToPrivateMessages = callback => {
-  if (socket) {
-    socket.on('message', callback);
-    return socket;
-  }
-};
-
-export const subscribeToReadStatus = callback => {
-  if (socket) {
-    socket.on('messageRead', callback);
-    return socket;
-  }
+  socket?.on('message', callback);
 };
 
 export const subscribeToGroupMessages = callback => {
-  if (socket) {
-    socket.on('groupMessage', callback);
-    return socket;
-  }
+  socket?.on('groupMessage', callback);
+};
+
+export const subscribeToReadStatus = callback => {
+  socket?.on('messageRead', callback);
 };
 
 export const disconnectSocket = () => {
-  if (socket) {
-    socket.disconnect();
-    socket = null;
-  }
+  socket?.disconnect();
+  socket = null;
 };

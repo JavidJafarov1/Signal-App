@@ -1,5 +1,6 @@
 import axios from 'axios';
 import {BASE_URL} from '../api';
+import {Platform} from 'react-native';
 
 export const AllUsersList = async token => {
   try {
@@ -31,7 +32,6 @@ export const GetConversationList = async token => {
       },
     });
 
-    
     return response?.data;
   } catch (error) {
     console.error(
@@ -70,16 +70,40 @@ export const ChatHistory = async ({
   }
 };
 
-export const NewGroup = async (name, memberIds, token) => {
+export const NewGroup = async (name, memberIds, imageUri, token) => {
   try {
     const url = `${BASE_URL}/api/groups/create-group`;
-    const body = {
-      name,
-      members: memberIds,
-    };
+    const formData = new FormData();
 
-    const response = await axios.post(url, body, {
+    console.log('url', url);
+
+    formData.append('name', name);
+    formData.append('members', JSON.stringify(memberIds));
+
+    if (imageUri) {
+      const fileName = imageUri.split('/').pop() || 'group-icon.jpg';
+      let fileExt = fileName.split('.').pop()?.toLowerCase();
+
+      if (fileExt === 'jpg') fileExt = 'jpeg';
+      if (!['jpeg', 'png', 'webp'].includes(fileExt)) {
+        fileExt = 'jpeg';
+      }
+
+      formData.append('groupIcone', {
+        uri: imageUri,
+        type: `image/${fileExt}`,
+        name: fileName,
+      });
+    }
+
+    // Debug formData content
+    formData._parts.forEach(p =>
+      console.log('Form field:', p[0], 'Value:', p[1]),
+    );
+
+    const response = await axios.post(url, formData, {
       headers: {
+        'Content-Type': 'multipart/form-data',
         Authorization: `Bearer ${token}`,
       },
     });
@@ -162,6 +186,43 @@ export const leaveGroup = async (id, token) => {
     console.error(
       'Error uploading profile photo:',
       error?.response?.data || error,
+    );
+    throw error;
+  }
+};
+
+export const UpdateGroupDetails = async (groupId, name, iconFile, token) => {
+  try {
+    const url = `${BASE_URL}/api/groups/update-group/${groupId}`;
+    const formData = new FormData();
+
+    if (name) {
+      formData.append('name', name);
+    }
+
+    if (iconFile?.uri) {
+      formData.append('groupIcone', {
+        uri:
+          Platform.OS === 'ios'
+            ? iconFile.uri.replace('file://', '')
+            : iconFile.uri,
+        name: iconFile.name || 'icon.png',
+        type: iconFile.type || 'image/png',
+      });
+    }
+
+    const response = await axios.put(url, formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error(
+      'Error updating group:',
+      error?.response?.data || error.message,
     );
     throw error;
   }

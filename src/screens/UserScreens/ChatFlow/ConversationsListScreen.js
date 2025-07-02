@@ -19,7 +19,7 @@ import {
   GetConversationList,
 } from '../../../utils/Apis/UsersList';
 import {useAuthToken} from '../../../utils/api';
-import {useSelector} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import {Color} from '../../../assets/color/Color';
 import Header from '../../../components/Header';
 import useAppHooks from '../../../auth/useAppHooks';
@@ -27,7 +27,7 @@ import {scale, verticalScale} from 'react-native-size-matters';
 import {useFocusEffect} from '@react-navigation/native';
 import {setAllUser, setGroupDetails} from '../../../store/reducer/userReducer';
 
-export default function ConversationsListScreen() {
+export default function ConversationsListScreen({route}) {
   const {navigation, t, dispatch} = useAppHooks();
   const [conversations, setConversations] = useState([]);
   const [filteredConversations, setFilteredConversations] = useState([]);
@@ -38,29 +38,23 @@ export default function ConversationsListScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const token = useAuthToken();
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await Promise.all([fetchConversations(), GetGroups()]);
-    setRefreshing(false);
-  };
-
   const SENDER = useSelector(state => state?.auth?.userDetails);
+
   useEffect(() => {
     initiateSocket(SENDER.id);
     return () => disconnectSocket();
-  }, []);
+  }, [SENDER.id]);
 
   useFocusEffect(
     useCallback(() => {
-      if (token) {
+      if (token && (route.params?.refresh || !conversations.length)) {
         fetchConversations();
       }
-    }, [token]),
+    }, [token, route.params?.refresh]),
   );
 
   useEffect(() => {
-    async function fetchUsers() {
+    const fetchUsers = async () => {
       setIsLoading(true);
       try {
         const response = await AllUsersList(token);
@@ -72,16 +66,15 @@ export default function ConversationsListScreen() {
           lastMessage: 'Start chatting!',
         }));
         dispatch(setAllUser(convos));
-        setIsLoading(false);
       } catch (err) {
-        console.error('❌ Fetch error:', err);
+        console.error('Fetch users error:', err);
       } finally {
         setIsLoading(false);
       }
-    }
+    };
     fetchUsers();
     GetGroups();
-  }, [token]);
+  }, [token, SENDER.id, dispatch]);
 
   const fetchConversations = async () => {
     setIsLoading(true);
@@ -93,7 +86,6 @@ export default function ConversationsListScreen() {
 
       const {privateChats = [], groupChats = []} = conversationResponse || {};
       const {groups = []} = groupResponse || {};
-
       dispatch(setGroupDetails(groups));
 
       const privateConvos = privateChats.map(chat => ({
@@ -125,13 +117,9 @@ export default function ConversationsListScreen() {
       });
 
       const allConversations = [...groupConvos, ...privateConvos];
-
       setConversations(allConversations);
       setFilteredConversations(allConversations);
-
       setGroupData(groupConvos);
-
-      setIsLoading(false);
     } catch (err) {
       console.error('Conversation fetch error:', err);
     } finally {
@@ -143,10 +131,7 @@ export default function ConversationsListScreen() {
     try {
       const updatedData = await GetAllGroup(token);
       const groups = updatedData?.groups || [];
-      console.log('groups', groups);
-
       dispatch(setGroupDetails(groups));
-
       const groupConversations = groups.map(group => ({
         id: group._id,
         type: 'group',
@@ -169,6 +154,12 @@ export default function ConversationsListScreen() {
     }
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([fetchConversations(), GetGroups()]);
+    setRefreshing(false);
+  };
+
   const showAllConversations = () => {
     setActiveTab('all');
     setFilteredConversations(conversations);
@@ -176,7 +167,6 @@ export default function ConversationsListScreen() {
 
   const showGroupChats = () => {
     setActiveTab('group');
-
     const groupsFromConversations = conversations.filter(
       convo => convo.type === 'group',
     );
@@ -185,12 +175,7 @@ export default function ConversationsListScreen() {
 
   const handleSearch = text => {
     setSearchQuery(text);
-
-    const dataToSearch =
-      activeTab === 'group'
-        ? conversations.filter(convo => convo.type === 'group')
-        : conversations;
-
+    const dataToSearch = activeTab === 'group' ? groupData : conversations;
     const filtered = dataToSearch.filter(
       convo =>
         convo.participant?.fullName
@@ -198,7 +183,6 @@ export default function ConversationsListScreen() {
           .includes(text.toLowerCase()) ||
         convo.participant?._id?.toLowerCase().includes(text.toLowerCase()),
     );
-
     setFilteredConversations(filtered);
   };
 
@@ -215,7 +199,6 @@ export default function ConversationsListScreen() {
     const avatarUrl = isGroup
       ? item.fullGroup?.groupIcone
       : item.participant?.avatar;
-
     const hasUnread = item?.unreadCount > 0;
 
     return (
@@ -254,7 +237,6 @@ export default function ConversationsListScreen() {
             </Text>
           )}
         </View>
-
         <View style={styles.textContainer}>
           <Text style={styles.conversationName}>
             {item.participant?.fullName}
@@ -263,7 +245,6 @@ export default function ConversationsListScreen() {
             {item.lastMessage}
           </Text>
         </View>
-
         {hasUnread && (
           <View style={styles.unreadBadgeRight}>
             <Text style={styles.unreadText}>{item.unreadCount}</Text>
@@ -285,7 +266,6 @@ export default function ConversationsListScreen() {
           onChangeText={handleSearch}
           placeholderTextColor={Color.white}
         />
-
         <View
           style={{
             flexDirection: 'row',
@@ -304,7 +284,6 @@ export default function ConversationsListScreen() {
             onPress={showAllConversations}>
             <Text style={styles.tabbarTxt}>All</Text>
           </TouchableOpacity>
-
           <TouchableOpacity
             style={[
               styles.tabbar,
@@ -317,16 +296,13 @@ export default function ConversationsListScreen() {
             <Text style={styles.tabbarTxt}>Group</Text>
           </TouchableOpacity>
         </View>
-
         {isLoading ? (
-          <ActivityIndicator size="large" color={Color?.blue} />
+          <ActivityIndicator size="large" color={Color.blue} />
         ) : (
           <>
-            {activeTab === 'all' ? (
-              <Text style={styles?.chatTxt}>All Chats</Text>
-            ) : (
-              <Text style={styles?.chatTxt}>Group Chats</Text>
-            )}
+            <Text style={styles.chatTxt}>
+              {activeTab === 'all' ? 'All Chats' : 'Group Chats'}
+            </Text>
             <FlatList
               data={filteredConversations}
               keyExtractor={item => item.id}
@@ -339,7 +315,6 @@ export default function ConversationsListScreen() {
             />
           </>
         )}
-
         <TouchableOpacity
           style={styles.plusIconContainer}
           onPress={() => navigation.navigate('AllUsersListScreen')}>
@@ -467,4 +442,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-
