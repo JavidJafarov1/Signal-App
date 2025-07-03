@@ -2,14 +2,12 @@ import React from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
 import {useSelector} from 'react-redux';
 import {AuthStack} from './AuthNavigator';
-import {UserStack} from './UserNavigator';
+import { UserStack } from './UserNavigator';
 
 const RootStack = createStackNavigator();
 
 const AppNavigator = () => {
   const user = useSelector(state => state?.auth?.userDetails);
-
-
   return (
     <RootStack.Navigator
       screenOptions={{

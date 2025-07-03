@@ -25,21 +25,27 @@ const authenticate = userId => {
   });
 };
 
+
 export const uploadFile = async (file, token) => {
   try {
     const body = new FormData();
+
     body.append('file', {
       uri: file.uri,
-      name: file.name,
-      type: file.type,
+      name: file.name || 'upload.jpg',
+      type: file.type || 'image/jpeg',
     });
 
     const response = await axios.post(`${BASE_URL}/api/upload`, body, {
-      headers: {Authorization: `Bearer ${token}`},
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data',
+      },
     });
 
     return response?.data;
   } catch (error) {
+    console.error('Upload failed:', error);
     throw error;
   }
 };
@@ -65,9 +71,8 @@ export const sendMessage = (payload, callback) => {
       ? 'image'
       : 'file'
     : 'text';
-  console.log('mediaType', mediaType, messageType);
 
-  const finalContent = hasMedia ? '' : content.trim();
+  const finalContent = content.trim();
 
   socket.emit(
     'sendMessage',

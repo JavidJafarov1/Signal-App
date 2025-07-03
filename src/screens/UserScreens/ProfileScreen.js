@@ -51,20 +51,26 @@ const ProfileScreen = () => {
       ) {
         return;
       }
-
       const image = response.assets[0];
+
+      const uri =
+        Platform.OS === 'android'
+          ? image.uri
+          : image.uri.replace('file://', '');
+      const fileName = image.fileName || `avatar_${Date.now()}.jpg`;
+      const mimeType = image.type || 'image/jpeg';
+
       const formData = new FormData();
       formData.append('avatar', {
-        uri:
-          Platform.OS === 'ios' ? image.uri.replace('file://', '') : image.uri,
-        type: 'image/jpeg',
-        name: image.fileName || 'avatar.jpg',
+        uri,
+        name: fileName,
+        type: mimeType,
       });
 
       setUploadingImage(true);
       try {
         const updatedData = await UploadProfilePhoto(
-          profileData?.id,
+          profileData?.user?._id || profileData?.id,
           token,
           formData,
         );
@@ -96,6 +102,10 @@ const ProfileScreen = () => {
     );
   }
 
+  const profileImage = profileData?.user?.avatar
+    ? {uri: profileData?.user?.avatar}
+    : require('../../assets/image/avatar.png');
+
   return (
     <ScreenWrapper>
       <Header />
@@ -111,11 +121,7 @@ const ProfileScreen = () => {
             )}
             <Image
               style={styles.avatarImage}
-              source={{
-                uri:
-                  profileData?.user?.avatar ||
-                  'https://your-fallback-image-url.com/avatar.png',
-              }}
+              source={profileImage}
               resizeMode="cover"
               onLoadEnd={() => setImageLoaded(true)}
             />
@@ -191,9 +197,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  detailsTxt:{
-    color:Color?.white
-  }
+  detailsTxt: {
+    color: Color?.white,
+  },
 });
-
-

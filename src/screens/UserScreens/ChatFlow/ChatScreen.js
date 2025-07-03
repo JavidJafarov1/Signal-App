@@ -29,11 +29,19 @@ import useAppHooks from '../../../auth/useAppHooks';
 import {Color} from '../../../assets/color/Color';
 import {scale} from 'react-native-size-matters';
 import {launchImageLibrary} from 'react-native-image-picker';
+import RNFS from 'react-native-fs';
+import {
+  request,
+  PERMISSIONS,
+  requestMultiple,
+  RESULTS,
+} from 'react-native-permissions';
 
 export default function ChatScreen({route}) {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [editingMessageId, setEditingMessageId] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
   const flatListRef = useRef(null);
   const {navigation} = useAppHooks();
   const token = useAuthToken();
@@ -63,20 +71,21 @@ export default function ChatScreen({route}) {
     });
 
     const media =
-      msg.messageType === 'image' || msg.messageType === 'file'
+      (msg.messageType === 'image' || msg.messageType === 'file') && msg.fileUrl
         ? {
             name: msg.fileName || '',
             type: msg.fileType || '',
             uri: msg.fileUrl || '',
           }
-        : msg.media || null;
+        : null;
+
     return {
       _id: msg._id,
       chatType: msg.chatType,
       receiverId: msg.receiver,
       content: msg.content || '',
       media,
-      type: msg.messageType || msg.type || 'text',
+      type: msg.messageType || 'text',
       from:
         chatType === 'group'
           ? msg.sender === senderId
@@ -127,13 +136,170 @@ export default function ChatScreen({route}) {
         scrollToBottom();
       }
     } catch (err) {
-      console.error('Fetch chat history failed:', err);
+      console.error('Fetch chat history failed:', err.message);
+      Alert.alert('Error', 'Failed to load chat history.');
     }
   }, [chatType, groupId, RECEIVER_ID, token]);
 
+const requestStoragePermission = async () => {
+  try {
+    if (Platform.OS === 'android') {
+      const permissionsToRequest = [];
+
+      const apiLevel = Platform.Version;
+
+      if (apiLevel >= 33) {
+        permissionsToRequest.push(PERMISSIONS.ANDROID.READ_MEDIA_IMAGES);
+      } else {
+        permissionsToRequest.push(PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE);
+      }
+
+      const statuses = await requestMultiple(permissionsToRequest);
+
+      const allGranted = Object.values(statuses).every(
+        status => status === RESULTS.GRANTED,
+      );
+
+      if (!allGranted) {
+        Alert.alert('Permission Denied', 'Please allow access to photos.');
+        return false;
+      }
+    } else if (Platform.OS === 'ios') {
+      const status = await check(PERMISSIONS.IOS.PHOTO_LIBRARY);
+
+      if (status === RESULTS.GRANTED || status === RESULTS.LIMITED) {
+        return true;
+      }
+
+      const result = await request(PERMISSIONS.IOS.PHOTO_LIBRARY);
+
+      if (result === RESULTS.GRANTED || result === RESULTS.LIMITED) {
+        return true;
+      }
+
+      Alert.alert('Permission Denied', 'Please allow access to photos.');
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error('Permission error:', err);
+    return false;
+  }
+};
+
+  const handleMediaPick = async () => {
+    const hasPermission = await requestStoragePermission();
+    if (!hasPermission) return;
+
+    launchImageLibrary({mediaType: 'photo'}, response => {
+      if (response.didCancel || response.errorCode) {
+        console.log('Image picker error:', response.errorMessage);
+        return;
+      }
+      const asset = response.assets?.[0];
+      if (asset) {
+        if (asset.fileSize && asset.fileSize > 10 * 1024 * 1024) {
+          Alert.alert('Error', 'File size exceeds 10MB limit.');
+          return;
+        }
+        setSelectedImage(asset);
+        setMessage('');
+      }
+    });
+  };
+
+  const sendMediaMessage = async (asset, caption) => {
+    const tempId = Date.now().toString();
+    const fileName = asset.fileName || `image-${tempId}.jpg`;
+    const tempPath = `${RNFS.TemporaryDirectoryPath}/${fileName}`;
+
+    try {
+      await RNFS.copyFile(asset.uri, tempPath);
+
+      const tempMsg = {
+        _id: tempId,
+        chatType,
+        content: caption.trim(),
+        from: 'me',
+        read: false,
+        timestamp: new Date().toISOString(),
+        type: 'image',
+        messageType: 'image',
+        media: {
+          name: fileName,
+          type: asset.type || 'image/jpeg',
+          uri: Platform.OS === 'android' ? `file://${tempPath}` : asset.uri,
+        },
+        ...(chatType === 'group' ? {groupId} : {receiverId: RECEIVER_ID}),
+      };
+
+      setMessages(prev => insertDateHeaders([...prev, formatMessage(tempMsg)]));
+      scrollToBottom();
+
+      const file = {
+        uri: Platform.OS === 'android' ? `file://${tempPath}` : asset.uri,
+        name: fileName,
+        type: asset.type || 'image/jpeg',
+      };
+
+      const uploaded = await uploadFile(file, token);
+
+      const finalMsg = {
+        ...tempMsg,
+        _id: tempId,
+        fileUrl: uploaded.fileUrl,
+        fileName: uploaded.fileName,
+        fileType: uploaded.fileType,
+        messageType: 'image',
+        media: {
+          name: uploaded.fileName,
+          type: uploaded.fileType,
+          uri: uploaded.fileUrl,
+        },
+        sender: senderId,
+        receiver: chatType === 'group' ? null : RECEIVER_ID,
+        groupId: chatType === 'group' ? groupId : null,
+      };
+
+      setMessages(prev =>
+        insertDateHeaders(
+          prev.map(m => (m._id === tempId ? formatMessage(finalMsg) : m)),
+        ),
+      );
+
+      sendMessage(finalMsg, res => {
+        if (res?.success && res.messageId) {
+          setMessages(prev =>
+            insertDateHeaders(
+              prev.map(m =>
+                m._id === tempId
+                  ? {...formatMessage(finalMsg), _id: res.messageId}
+                  : m,
+              ),
+            ),
+          );
+        }
+      });
+    } catch (err) {
+      console.error('Upload/send error:', err.message, err.response?.data);
+      Alert.alert('Error', 'Failed to send media message.');
+      setMessages(prev =>
+        insertDateHeaders(prev.filter(m => m._id !== tempId)),
+      );
+    }
+  };
+
   const handleSend = useCallback(() => {
     const trimmed = message.trim();
-    if (!trimmed) return;
+    if (!trimmed && !selectedImage) return;
+
+    if (selectedImage) {
+      sendMediaMessage(selectedImage, trimmed);
+      setSelectedImage(null);
+      setMessage('');
+      return;
+    }
 
     if (editingMessageId) {
       editMessage({messageId: editingMessageId, content: trimmed});
@@ -157,6 +323,7 @@ export default function ChatScreen({route}) {
         type: 'text',
         ...(chatType === 'group' ? {groupId} : {receiverId: RECEIVER_ID}),
       };
+
       setMessages(prev => insertDateHeaders([...prev, formatMessage(newMsg)]));
       scrollToBottom();
 
@@ -173,90 +340,22 @@ export default function ChatScreen({route}) {
       });
     }
     setMessage('');
-  }, [message, editingMessageId, chatType, groupId, RECEIVER_ID]);
-
-  const handleMediaPick = () => {
-    launchImageLibrary({mediaType: 'image'}, response => {
-      const asset = response.assets?.[0];
-      if (asset) sendMediaMessage(asset);
-    });
-  };
-
-  const sendMediaMessage = async asset => {
-    const file = {
-      uri: asset.uri,
-      name: asset.fileName || `upload.${asset.type.split('/')[1] || 'jpg'}`,
-      type: asset.type,
-    };
-
-    try {
-      const uploaded = await uploadFile(file, token);
-      const isImage = uploaded.fileType.startsWith('image/');
-      const tempId = Date.now().toString();
-
-      const newMsg = {
-        _id: tempId,
-        chatType,
-        content: '',
-        from: 'me',
-        read: false,
-        timestamp: new Date().toISOString(),
-        type: isImage ? 'image' : 'file',
-        media: {
-          name: uploaded.fileName,
-          type: uploaded.fileType,
-          uri: uploaded.fileUrl,
-        },
-        fileUrl: uploaded.fileUrl,
-        ...(chatType === 'group' ? {groupId} : {receiverId: RECEIVER_ID}),
-      };
-      setMessages(prev =>
-        insertDateHeaders([...prev, newMsgFormatted(newMsg)]),
-      );
-
-      scrollToBottom();
-
-      sendMessage(
-        {
-          chatType,
-          receiverId: RECEIVER_ID,
-          groupId,
-          media: {
-            name: uploaded.fileName,
-            type: uploaded.fileType,
-            uri: uploaded.fileUrl,
-          },
-          fileUrl: uploaded.fileUrl,
-        },
-        res => {
-          if (res?.success && res.messageId) {
-            setMessages(prev =>
-              insertDateHeaders(
-                prev.map(m =>
-                  m._id === tempId ? {...m, _id: res.messageId} : m,
-                ),
-              ),
-            );
-          }
-        },
-      );
-    } catch (err) {
-      console.error('upload/send error:', err);
-    }
-  };
-
-  function newMsgFormatted(msg) {
-    return formatMessage({
-      ...msg,
-      media: msg.media,
-    });
-  }
+  }, [
+    message,
+    selectedImage,
+    editingMessageId,
+    chatType,
+    groupId,
+    RECEIVER_ID,
+  ]);
 
   const handleDelete = useCallback(item => {
-    if (item.from === 'me') deleteMessage(item._id);
-    setMessages(prev =>
-      insertDateHeaders(prev.filter(m => m._id !== item._id)),
-    );
+    if (item.from === 'me') {
+      deleteMessage(item._id);
+      setMessages(prev =>
+        insertDateHeaders(prev.filter(m => m._id !== item._id)),
+      );
+    }
   }, []);
 
   const showOptions = useCallback(
@@ -305,7 +404,6 @@ export default function ChatScreen({route}) {
           setMessages(prev =>
             insertDateHeaders([...prev, formatMessage(newMsg)]),
           );
-
           scrollToBottom();
         }
       });
@@ -323,7 +421,6 @@ export default function ChatScreen({route}) {
           setMessages(prev =>
             insertDateHeaders([...prev, formatMessage(newMsg)]),
           );
-
           scrollToBottom();
         }
       });
@@ -353,7 +450,7 @@ export default function ChatScreen({route}) {
       typeof item.media.type === 'string' &&
       item.media.type.startsWith('image/') &&
       typeof item.media.uri === 'string' &&
-      item.media.uri.trim() !== '';
+      item.media.uri.length > 0;
 
     return (
       <TouchableOpacity onLongPress={() => showOptions(item)}>
@@ -369,8 +466,8 @@ export default function ChatScreen({route}) {
               resizeMode="cover"
             />
           )}
-          {item.content.length > 0 && (
-            <Text style={styles.messageText}>{item.content}</Text>
+          {item.content && item.content.trim().length > 0 && (
+            <Text style={styles.messageText}>{item.content.trim()}</Text>
           )}
           <View style={styles.metaContainer}>
             {item.from === 'me' && (
@@ -382,16 +479,30 @@ export default function ChatScreen({route}) {
       </TouchableOpacity>
     );
   };
+  const defaultAvatar = require('../../../assets/image/avatar.png');
+  const groupAvatar =
+    fullGroup?.groupIcone &&
+    typeof fullGroup.groupIcone === 'string' &&
+    fullGroup.groupIcone.startsWith('http')
+      ? fullGroup.groupIcone
+      : defaultAvatar;
+
+  const fallbackUserAvatar =
+    user?.avatar &&
+    typeof user.avatar === 'string' &&
+    user.avatar.startsWith('http')
+      ? user.avatar
+      : fullGroup?.createdBy?.avatar &&
+        typeof fullGroup.createdBy.avatar === 'string' &&
+        fullGroup.createdBy.avatar.startsWith('http')
+      ? fullGroup.createdBy.avatar
+      : defaultAvatar;
 
   return (
     <ScreenWrapper>
       <ChatHeader
         userName={chatType === 'group' ? fullGroup?.name : user?.fullName}
-        avatar={
-          chatType === 'group'
-            ? fullGroup?.groupIcone
-            : user?.avatar || fullGroup?.createdBy?.avatar
-        }
+        avatar={chatType === 'group' ? groupAvatar : fallbackUserAvatar}
         menu={chatType === 'group'}
         onMenuPress={() => {
           if (chatType === 'group') {
@@ -402,6 +513,7 @@ export default function ChatScreen({route}) {
           }
         }}
       />
+
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -414,6 +526,28 @@ export default function ChatScreen({route}) {
           onContentSizeChange={scrollToBottom}
           showsVerticalScrollIndicator={false}
         />
+        {selectedImage && (
+          <View style={styles.imagePreviewContainer}>
+            <Image
+              source={{uri: selectedImage.uri}}
+              style={styles.previewImage}
+              resizeMode="cover"
+            />
+            <Text
+              numberOfLines={1}
+              style={{
+                color: Color?.black,
+                width: '75%',
+              }}>
+              {selectedImage?.fileName}
+            </Text>
+            <TouchableOpacity
+              onPress={() => setSelectedImage(null)}
+              style={styles.removeImageButton}>
+              <Text style={styles.removeImageText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+        )}
         <View style={styles.inputContainer}>
           <TouchableOpacity
             onPress={handleMediaPick}
@@ -521,5 +655,28 @@ const styles = StyleSheet.create({
   dateHeaderText: {
     color: '#ccc',
     fontSize: 12,
+  },
+  imagePreviewContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 10,
+    marginBottom: 5,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+    padding: 5,
+  },
+  previewImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 8,
+    marginRight: 10,
+  },
+  removeImageButton: {
+    marginLeft: 'auto',
+    padding: 5,
+  },
+  removeImageText: {
+    fontSize: 18,
+    color: 'red',
   },
 });

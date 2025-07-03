@@ -17,6 +17,9 @@ const ChatHeader = React.memo(({userName, avatar, onMenuPress, menu}) => {
   const [loadFailed, setLoadFailed] = useState(false);
 
   const hasAvatar = typeof avatar === 'string' && avatar.startsWith('http');
+  const isRemoteAvatar =
+    avatar && typeof avatar === 'string' && avatar.startsWith('http');
+  const isLocalImage = typeof avatar === 'number';
 
   return (
     <View style={styles.headerContainer}>
@@ -25,6 +28,35 @@ const ChatHeader = React.memo(({userName, avatar, onMenuPress, menu}) => {
       </TouchableOpacity>
 
       <View style={styles.avatarContainer}>
+        {isRemoteAvatar && !loadFailed ? (
+          <>
+            <Image
+              source={{uri: avatar}}
+              style={styles.avatarImage}
+              onLoadStart={() => setLoading(true)}
+              onLoadEnd={() => setLoading(false)}
+              onError={() => {
+                setLoading(false);
+                setLoadFailed(true);
+              }}
+            />
+            {loading && (
+              <View style={styles.loaderOverlay}>
+                <ActivityIndicator size="small" color={Color?.blue} />
+              </View>
+            )}
+          </>
+        ) : (
+          <Image
+            source={
+              isLocalImage ? avatar : require('../assets/image/avatar.png')
+            }
+            style={styles.avatarImage}
+          />
+        )}
+      </View>
+
+      {/* <View style={styles.avatarContainer}>
         {hasAvatar && !loadFailed ? (
           <>
             <Image
@@ -50,7 +82,7 @@ const ChatHeader = React.memo(({userName, avatar, onMenuPress, menu}) => {
             </Text>
           </View>
         )}
-      </View>
+      </View> */}
 
       <View style={styles.nameContainer}>
         <Text style={styles.userName}>{userName}</Text>

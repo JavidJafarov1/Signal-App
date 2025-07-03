@@ -31,7 +31,6 @@ export const GetConversationList = async token => {
         Authorization: `Bearer ${token}`,
       },
     });
-
     return response?.data;
   } catch (error) {
     console.error(
@@ -75,8 +74,6 @@ export const NewGroup = async (name, memberIds, imageUri, token) => {
     const url = `${BASE_URL}/api/groups/create-group`;
     const formData = new FormData();
 
-    console.log('url', url);
-
     formData.append('name', name);
     formData.append('members', JSON.stringify(memberIds));
 
@@ -96,7 +93,7 @@ export const NewGroup = async (name, memberIds, imageUri, token) => {
       });
     }
 
-    // Debug formData content
+
     formData._parts.forEach(p =>
       console.log('Form field:', p[0], 'Value:', p[1]),
     );

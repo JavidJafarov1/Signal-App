@@ -19,7 +19,7 @@ import {
   GetConversationList,
 } from '../../../utils/Apis/UsersList';
 import {useAuthToken} from '../../../utils/api';
-import {useDispatch, useSelector} from 'react-redux';
+import {useSelector} from 'react-redux';
 import {Color} from '../../../assets/color/Color';
 import Header from '../../../components/Header';
 import useAppHooks from '../../../auth/useAppHooks';
@@ -87,7 +87,6 @@ export default function ConversationsListScreen({route}) {
       const {privateChats = [], groupChats = []} = conversationResponse || {};
       const {groups = []} = groupResponse || {};
       dispatch(setGroupDetails(groups));
-
       const privateConvos = privateChats.map(chat => ({
         id: chat._id,
         type: 'private',
@@ -96,7 +95,9 @@ export default function ConversationsListScreen({route}) {
           avatar: chat.avatar,
           _id: chat._id,
         },
-        lastMessage: chat?.lastMessage?.text || 'Start chatting!',
+        lastMessage: chat?.lastMessage?.content
+          ? chat?.lastMessage?.content
+          : chat?.lastMessage?.messageType || 'Start Chating',
         unreadCount: chat?.unreadCount || 0,
       }));
 
@@ -111,7 +112,9 @@ export default function ConversationsListScreen({route}) {
           },
           members: detailedGroup?.members || [],
           fullGroup: detailedGroup,
-          lastMessage: groupChat?.lastMessage?.text || 'Start chatting!',
+          lastMessage: groupChat?.lastMessage?.content
+            ? groupChat?.lastMessage?.content
+            : groupChat?.lastMessage?.messageType || 'Start Chating',
           unreadCount: groupChat?.unreadCount || 0,
         };
       });
@@ -150,7 +153,6 @@ export default function ConversationsListScreen({route}) {
       }
     } catch (err) {
       console.error('Group fetch error:', err?.response?.data || err);
-      Alert.alert('Error', 'Could not load group data');
     }
   };
 
@@ -201,6 +203,10 @@ export default function ConversationsListScreen({route}) {
       : item.participant?.avatar;
     const hasUnread = item?.unreadCount > 0;
 
+    const avatarImage = avatarUrl
+      ? {uri: avatarUrl}
+      : require('../../../assets/image/avatar.png');
+
     return (
       <TouchableOpacity
         style={styles.conversationItem}
@@ -215,26 +221,18 @@ export default function ConversationsListScreen({route}) {
           })
         }>
         <View style={styles.avatarWrapper}>
-          {avatarUrl ? (
-            <>
-              <Image
-                source={{uri: avatarUrl}}
-                style={styles.avatarImage}
-                onLoadStart={() => handleAvatarLoadStart(item.id)}
-                onLoadEnd={() => handleAvatarLoadEnd(item.id)}
-              />
-              {avatarLoading[item.id] && (
-                <ActivityIndicator
-                  size="small"
-                  color={Color.blue}
-                  style={styles.avatarLoader}
-                />
-              )}
-            </>
-          ) : (
-            <Text style={styles.avatarText}>
-              {item?.participant?.fullName?.charAt(0).toUpperCase() || '?'}
-            </Text>
+          <Image
+            source={avatarImage}
+            style={styles.avatarImage}
+            onLoadStart={() => handleAvatarLoadStart(item.id)}
+            onLoadEnd={() => handleAvatarLoadEnd(item.id)}
+          />
+          {avatarLoading[item.id] && (
+            <ActivityIndicator
+              size="small"
+              color={Color.blue}
+              style={styles.avatarLoader}
+            />
           )}
         </View>
         <View style={styles.textContainer}>

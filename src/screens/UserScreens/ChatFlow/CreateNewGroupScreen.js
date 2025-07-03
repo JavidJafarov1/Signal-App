@@ -43,19 +43,16 @@ const CreateNewGroupScreen = () => {
   const renderUserItem = ({item}) => {
     const isSelected = selectedMembers.includes(item?.participant._id);
     const avatarUrl = item?.participant?.avatar;
+    const avatarImage = avatarUrl
+      ? {uri: avatarUrl}
+      : require('../../../assets/image/avatar.png');
 
     return (
       <TouchableOpacity
         style={[styles.conversationItem, isSelected && styles.selectedItem]}
         onPress={() => toggleMemberSelection(item?.participant._id)}>
         <View style={styles.avatarPlaceholder}>
-          {avatarUrl ? (
-            <Image source={{uri: avatarUrl}} style={styles.avatarImage} />
-          ) : (
-            <Text style={styles.avatarText}>
-              {item?.participant?.fullName?.charAt(0).toUpperCase() || '?'}
-            </Text>
-          )}
+          <Image source={avatarImage} style={styles.avatarImage} />
         </View>
         <Text style={styles.conversationName}>
           {item?.participant.fullName}
@@ -66,17 +63,12 @@ const CreateNewGroupScreen = () => {
 
   const renderSelectedUser = ({item}) => {
     const avatarUrl = item?.participant?.avatar;
+    const avatarImage = avatarUrl
+      ? {uri: avatarUrl}
+      : require('../../../assets/image/avatar.png');
     return (
       <View style={styles.selectedMemberContainer}>
-        {avatarUrl ? (
-          <Image source={{uri: avatarUrl}} style={styles.selectedAvatar} />
-        ) : (
-          <View style={styles.fallbackAvatar}>
-            <Text style={styles.avatarText}>
-              {item?.participant?.fullName?.charAt(0).toUpperCase() || '?'}
-            </Text>
-          </View>
-        )}
+        <Image source={avatarImage} style={styles.selectedAvatar} />
         <Text style={styles.selectedName} numberOfLines={1}>
           {item?.participant?.fullName?.split(' ')[0]}
         </Text>
@@ -122,16 +114,18 @@ const CreateNewGroupScreen = () => {
 
         <Text style={styles.sectionTitle}>Add Members</Text>
 
-        {selectedMembers.length > 0 && (
-          <FlatList
-            data={getSelectedUserDetails()}
-            keyExtractor={item => item?.participant?._id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.selectedList}
-            renderItem={renderSelectedUser}
-          />
-        )}
+        <View>
+          {selectedMembers.length > 0 && (
+            <FlatList
+              data={getSelectedUserDetails()}
+              keyExtractor={item => item?.participant?._id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.selectedList}
+              renderItem={renderSelectedUser}
+            />
+          )}
+        </View>
 
         <Text style={styles.sectionTitle}>All Contacts</Text>
 

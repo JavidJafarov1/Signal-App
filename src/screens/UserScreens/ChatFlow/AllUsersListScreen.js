@@ -53,6 +53,9 @@ export default function ConversationsListScreen() {
 
   const renderConversation = ({item}) => {
     const avatarUrl = item?.participant?.avatar;
+    const avatarImage = avatarUrl
+      ? {uri: avatarUrl}
+      : require('../../../assets/image/avatar.png');
 
     return (
       <TouchableOpacity
@@ -63,16 +66,11 @@ export default function ConversationsListScreen() {
             senderId: item.id
               .split('_')
               .find(id => id !== item.participant._id),
+            chatType: 'private',
           })
         }>
         <View style={styles.avatarPlaceholder}>
-          {avatarUrl ? (
-            <Image source={{uri: avatarUrl}} style={styles.avatarImage} />
-          ) : (
-            <Text style={styles.avatarText}>
-              {item?.participant?.fullName?.charAt(0).toUpperCase() || '?'}
-            </Text>
-          )}
+          <Image source={avatarImage} style={styles.avatarImage} />
         </View>
         <View style={styles.textContainer}>
           <Text style={styles.conversationName}>

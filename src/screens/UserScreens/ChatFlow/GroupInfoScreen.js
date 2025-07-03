@@ -75,7 +75,6 @@ export default function GroupInfoScreen({route}) {
       }
     } catch (error) {
       console.error('Error fetching group details:', error);
-      Alert.alert('Error', 'Could not load group members');
     } finally {
       setIsLoading(false);
     }
@@ -237,17 +236,17 @@ export default function GroupInfoScreen({route}) {
     );
   };
 
-  const AvatarDisplay = ({name, avatar}) => (
-    <View style={styles.avatarPlaceholder}>
-      {avatar ? (
-        <Image source={{uri: avatar}} style={styles.avatarImage} />
-      ) : (
-        <Text style={styles.avatarText}>
-          {name?.charAt(0).toUpperCase() || '?'}
-        </Text>
-      )}
-    </View>
-  );
+  const AvatarDisplay = ({name, avatar}) => {
+    const avatarImage = avatar
+      ? {uri: avatar}
+      : require('../../../assets/image/avatar.png'); 
+
+    return (
+      <View style={styles.avatarPlaceholder}>
+        <Image source={avatarImage} style={styles.avatarImage} />
+      </View>
+    );
+  };
 
   const renderMemberItem = ({item}) => (
     <TouchableOpacity

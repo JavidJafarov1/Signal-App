@@ -1208,12 +1208,16 @@ PODS:
     - Firebase/Auth (= 11.13.0)
     - React-Core
     - RNFBApp
+  - RNFS (2.20.0):
+    - React-Core
   - RNGestureHandler (2.16.2):
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
   - RNGoogleSignin (14.0.1):
     - GoogleSignIn (~> 7.1)
+    - React-Core
+  - RNPermissions (5.4.1):
     - React-Core
   - RNReanimated (3.6.1):
     - glog
@@ -1313,8 +1317,10 @@ DEPENDENCIES:
   - RNFastImage (from `../node_modules/react-native-fast-image`)
   - "RNFBApp (from `../node_modules/@react-native-firebase/app`)"
   - "RNFBAuth (from `../node_modules/@react-native-firebase/auth`)"
+  - RNFS (from `../node_modules/react-native-fs`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - "RNGoogleSignin (from `../node_modules/@react-native-google-signin/google-signin`)"
+  - RNPermissions (from `../node_modules/react-native-permissions`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNSound (from `../node_modules/react-native-sound`)
@@ -1466,10 +1472,14 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-firebase/app"
   RNFBAuth:
     :path: "../node_modules/@react-native-firebase/auth"
+  RNFS:
+    :path: "../node_modules/react-native-fs"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
   RNGoogleSignin:
     :path: "../node_modules/@react-native-google-signin/google-signin"
+  RNPermissions:
+    :path: "../node_modules/react-native-permissions"
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
   RNScreens:
@@ -1561,8 +1571,10 @@ SPEC CHECKSUMS:
   RNFastImage: 5c9c9fed9c076e521b3f509fe79e790418a544e8
   RNFBApp: 9ddaa4edee3ea7dfca8c866a4c1feca2439e2de6
   RNFBAuth: 0b56c55119d269aae2d699ec751a4b13c2aa24fd
+  RNFS: 4ac0f0ea233904cb798630b3c077808c06931688
   RNGestureHandler: bbb04bccfd972fc228f7307815ccd11f47324605
   RNGoogleSignin: 5a4ed264f83efcc727cc0d4f3e977dbb037de4cc
+  RNPermissions: a8fc7bd33554f070c7ea0d749ae809c0b76cad32
   RNReanimated: 91f980a433a2c966a7634b9c438312d8f5a0942e
   RNScreens: f0e300a3be13eff48f8afb0b5c6fc558c9369b03
   RNSound: 6c156f925295bdc83e8e422e7d8b38d33bc71852

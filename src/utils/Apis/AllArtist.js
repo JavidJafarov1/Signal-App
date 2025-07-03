@@ -74,12 +74,14 @@ export const Profile = async token => {
 };
 
 export const UploadProfilePhoto = async (id, token, formData) => {
+  console.log('id,token,formData', id, token, formData);
   try {
-
     const url = `${BASE_URL}/api/users/${id}`;
+
     const response = await axios.put(url, formData, {
       headers: {
         Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data', // ✅ Needed for Android
       },
     });
 

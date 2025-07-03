@@ -219,12 +219,19 @@ const RegistrationScreen = () => {
           />
           {error.lastName && <Text style={styles.error}>{error.lastName}</Text>}
 
-          <CustomTextInput
+          {/* <CustomTextInput
             placeholder={t('E-mail')}
             value={form?.email}
             onChangeText={text => handleChange('email', text)}
             keyboardType="email-address"
+          /> */}
+          <CustomTextInput
+            placeholder={t('E-mail')}
+            value={form?.email}
+            onChangeText={text => handleChange('email', text.toLowerCase())}
+            keyboardType="email-address"
           />
+
           {error.email && <Text style={styles.error}>{error.email}</Text>}
           <View style={{flexDirection: 'row'}}>
             <TouchableOpacity

@@ -15,7 +15,7 @@ import LoadingOverlay from '../../components/Loader';
 const EmailConfirmationScreen = () => {
   const {navigation, t} = useAppHooks();
 
-  const [email, setEmail] = useState('Demo@gmail.com');
+  const [email, setEmail] = useState('@gmail.com');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -72,7 +72,7 @@ const EmailConfirmationScreen = () => {
             placeholder="E-mail"
             value={email}
             onChangeText={text => {
-              setEmail(text);
+              setEmail(text.toLowerCase());
               setError('');
             }}
             keyboardType="email-address"
