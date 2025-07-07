@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ScreenWrapper from '../../../components/ScreenWrapper';
-import {initiateSocket, disconnectSocket} from '../../../utils/socket';
 import {
   AllUsersList,
   GetAllGroup,
@@ -26,6 +25,13 @@ import useAppHooks from '../../../auth/useAppHooks';
 import {scale, verticalScale} from 'react-native-size-matters';
 import {useFocusEffect} from '@react-navigation/native';
 import {setAllUser, setGroupDetails} from '../../../store/reducer/userReducer';
+import {
+  initiateSocket,
+  disconnectSocket,
+  subscribeToPrivateMessages,
+  subscribeToGroupMessages,
+  subscribeToChatList,
+} from '../../../utils/socket';
 
 export default function ConversationsListScreen({route}) {
   const {navigation, t, dispatch} = useAppHooks();
@@ -42,15 +48,31 @@ export default function ConversationsListScreen({route}) {
 
   useEffect(() => {
     initiateSocket(SENDER.id);
-    return () => disconnectSocket();
+    const privateMsgSub = subscribeToPrivateMessages(() => {
+      fetchConversations();
+    });
+    const groupMsgSub = subscribeToGroupMessages(() => {
+      fetchConversations();
+    });
+    const chatListSub = subscribeToChatList(() => {
+      fetchConversations();
+    });
+
+    return () => {
+      disconnectSocket();
+      privateMsgSub?.off?.();
+      groupMsgSub?.off?.();
+      chatListSub?.off?.();
+    };
   }, [SENDER.id]);
+
 
   useFocusEffect(
     useCallback(() => {
-      if (token && (route.params?.refresh || !conversations.length)) {
+      if (token && !conversations.length) {
         fetchConversations();
       }
-    }, [token, route.params?.refresh]),
+    }, [token]),
   );
 
   useEffect(() => {

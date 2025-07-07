@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useCallback, useRef} from 'react';
+import React, {useEffect, useState, useCallback, useRef, useMemo} from 'react';
 import {
   View,
   Text,
@@ -13,13 +13,14 @@ import {
 } from 'react-native';
 import {
   sendMessage,
-  editMessage,
   deleteMessage,
   markAsRead,
   subscribeToPrivateMessages,
   subscribeToReadStatus,
   subscribeToGroupMessages,
   uploadFile,
+  subscribeToDeletedMessages,
+  initiateSocket,
 } from '../../../utils/socket';
 import ScreenWrapper from '../../../components/ScreenWrapper';
 import {ChatHistory} from '../../../utils/Apis/UsersList';
@@ -29,27 +30,23 @@ import useAppHooks from '../../../auth/useAppHooks';
 import {Color} from '../../../assets/color/Color';
 import {scale} from 'react-native-size-matters';
 import {launchImageLibrary} from 'react-native-image-picker';
-import RNFS from 'react-native-fs';
-import {
-  request,
-  PERMISSIONS,
-  requestMultiple,
-  RESULTS,
-} from 'react-native-permissions';
+import {useFocusEffect} from '@react-navigation/native';
 
 export default function ChatScreen({route}) {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
-  const [editingMessageId, setEditingMessageId] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(null);
   const flatListRef = useRef(null);
   const {navigation} = useAppHooks();
+  const [selectedImage, setSelectedImage] = useState(null);
+
   const token = useAuthToken();
   const {user, senderId, chatType, groupId, fullGroup} = route.params || {};
   const RECEIVER_ID = user?._id;
 
   const scrollToBottom = () => {
-    flatListRef.current?.scrollToEnd({animated: true});
+    setTimeout(() => {
+      flatListRef.current?.scrollToEnd({animated: true});
+    }, 100);
   };
 
   const formatMessage = msg => {
@@ -136,73 +133,58 @@ export default function ChatScreen({route}) {
         scrollToBottom();
       }
     } catch (err) {
-      console.error('Fetch chat history failed:', err.message);
-      Alert.alert('Error', 'Failed to load chat history.');
+      console.error('Fetch chat history failed:', err);
     }
   }, [chatType, groupId, RECEIVER_ID, token]);
 
-const requestStoragePermission = async () => {
-  try {
-    if (Platform.OS === 'android') {
-      const permissionsToRequest = [];
+  const handleSend = useCallback(() => {
+    const trimmed = message.trim();
+    if (!trimmed && !selectedImage) return;
 
-      const apiLevel = Platform.Version;
-
-      if (apiLevel >= 33) {
-        permissionsToRequest.push(PERMISSIONS.ANDROID.READ_MEDIA_IMAGES);
-      } else {
-        permissionsToRequest.push(PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE);
-      }
-
-      const statuses = await requestMultiple(permissionsToRequest);
-
-      const allGranted = Object.values(statuses).every(
-        status => status === RESULTS.GRANTED,
-      );
-
-      if (!allGranted) {
-        Alert.alert('Permission Denied', 'Please allow access to photos.');
-        return false;
-      }
-    } else if (Platform.OS === 'ios') {
-      const status = await check(PERMISSIONS.IOS.PHOTO_LIBRARY);
-
-      if (status === RESULTS.GRANTED || status === RESULTS.LIMITED) {
-        return true;
-      }
-
-      const result = await request(PERMISSIONS.IOS.PHOTO_LIBRARY);
-
-      if (result === RESULTS.GRANTED || result === RESULTS.LIMITED) {
-        return true;
-      }
-
-      Alert.alert('Permission Denied', 'Please allow access to photos.');
-      return false;
+    if (selectedImage) {
+      sendMediaMessage(selectedImage, trimmed);
+      setSelectedImage(null);
+      setMessage('');
+      return;
     }
 
-    return true;
-  } catch (err) {
-    console.error('Permission error:', err);
-    return false;
-  }
-};
+    const tempId = Date.now().toString();
+    const newMsg = {
+      _id: tempId,
+      chatType,
+      content: trimmed,
+      sender: senderId,
+      from: 'me',
+      read: false,
+      timestamp: new Date().toISOString(),
+      type: 'text',
+      ...(chatType === 'group' ? {groupId} : {receiverId: RECEIVER_ID}),
+    };
 
-  const handleMediaPick = async () => {
-    const hasPermission = await requestStoragePermission();
-    if (!hasPermission) return;
+    setMessages(prev => insertDateHeaders([...prev, formatMessage(newMsg)]));
+    scrollToBottom();
 
-    launchImageLibrary({mediaType: 'photo'}, response => {
-      if (response.didCancel || response.errorCode) {
-        console.log('Image picker error:', response.errorMessage);
-        return;
+    sendMessage(newMsg, res => {
+      if (res?.success && res.messageId) {
+        setMessages(prev =>
+          insertDateHeaders(
+            prev.map(m =>
+              m._id === tempId
+                ? {...m, _id: res.messageId, sender: senderId}
+                : m,
+            ),
+          ),
+        );
       }
+    });
+
+    setMessage('');
+  }, [message, selectedImage, chatType, groupId, RECEIVER_ID, senderId]);
+
+  const handleMediaPick = () => {
+    launchImageLibrary({mediaType: 'photo'}, response => {
       const asset = response.assets?.[0];
       if (asset) {
-        if (asset.fileSize && asset.fileSize > 10 * 1024 * 1024) {
-          Alert.alert('Error', 'File size exceeds 10MB limit.');
-          return;
-        }
         setSelectedImage(asset);
         setMessage('');
       }
@@ -211,35 +193,33 @@ const requestStoragePermission = async () => {
 
   const sendMediaMessage = async (asset, caption) => {
     const tempId = Date.now().toString();
-    const fileName = asset.fileName || `image-${tempId}.jpg`;
-    const tempPath = `${RNFS.TemporaryDirectoryPath}/${fileName}`;
+    const localUri = asset.uri;
+
+    const tempMsg = {
+      _id: tempId,
+      chatType,
+      content: caption.trim(),
+      sender: senderId,
+      from: 'me',
+      read: false,
+      timestamp: new Date().toISOString(),
+      type: 'image',
+      messageType: 'image',
+      media: {
+        name: asset.fileName || `image-${tempId}.jpg`,
+        type: asset.type || 'image/jpeg',
+        uri: localUri,
+      },
+      ...(chatType === 'group' ? {groupId} : {receiverId: RECEIVER_ID}),
+    };
+
+    setMessages(prev => insertDateHeaders([...prev, formatMessage(tempMsg)]));
+    scrollToBottom();
 
     try {
-      await RNFS.copyFile(asset.uri, tempPath);
-
-      const tempMsg = {
-        _id: tempId,
-        chatType,
-        content: caption.trim(),
-        from: 'me',
-        read: false,
-        timestamp: new Date().toISOString(),
-        type: 'image',
-        messageType: 'image',
-        media: {
-          name: fileName,
-          type: asset.type || 'image/jpeg',
-          uri: Platform.OS === 'android' ? `file://${tempPath}` : asset.uri,
-        },
-        ...(chatType === 'group' ? {groupId} : {receiverId: RECEIVER_ID}),
-      };
-
-      setMessages(prev => insertDateHeaders([...prev, formatMessage(tempMsg)]));
-      scrollToBottom();
-
       const file = {
-        uri: Platform.OS === 'android' ? `file://${tempPath}` : asset.uri,
-        name: fileName,
+        uri: asset.uri,
+        name: asset.fileName || `image-${Date.now()}.jpg`,
         type: asset.type || 'image/jpeg',
       };
 
@@ -253,7 +233,7 @@ const requestStoragePermission = async () => {
         fileType: uploaded.fileType,
         messageType: 'image',
         media: {
-          name: uploaded.fileName,
+          name: uploaded.name,
           type: uploaded.fileType,
           uri: uploaded.fileUrl,
         },
@@ -274,7 +254,11 @@ const requestStoragePermission = async () => {
             insertDateHeaders(
               prev.map(m =>
                 m._id === tempId
-                  ? {...formatMessage(finalMsg), _id: res.messageId}
+                  ? {
+                      ...formatMessage(finalMsg),
+                      _id: res.messageId,
+                      sender: senderId,
+                    }
                   : m,
               ),
             ),
@@ -282,73 +266,13 @@ const requestStoragePermission = async () => {
         }
       });
     } catch (err) {
-      console.error('Upload/send error:', err.message, err.response?.data);
-      Alert.alert('Error', 'Failed to send media message.');
+      console.error('Upload/send error:', err);
+      Alert.alert('Error', 'Failed to send media message');
       setMessages(prev =>
         insertDateHeaders(prev.filter(m => m._id !== tempId)),
       );
     }
   };
-
-  const handleSend = useCallback(() => {
-    const trimmed = message.trim();
-    if (!trimmed && !selectedImage) return;
-
-    if (selectedImage) {
-      sendMediaMessage(selectedImage, trimmed);
-      setSelectedImage(null);
-      setMessage('');
-      return;
-    }
-
-    if (editingMessageId) {
-      editMessage({messageId: editingMessageId, content: trimmed});
-      setMessages(prev =>
-        insertDateHeaders(
-          prev.map(m =>
-            m._id === editingMessageId ? {...m, content: trimmed} : m,
-          ),
-        ),
-      );
-      setEditingMessageId(null);
-    } else {
-      const tempId = Date.now().toString();
-      const newMsg = {
-        _id: tempId,
-        chatType,
-        content: trimmed,
-        from: 'me',
-        read: false,
-        timestamp: new Date().toISOString(),
-        type: 'text',
-        ...(chatType === 'group' ? {groupId} : {receiverId: RECEIVER_ID}),
-      };
-
-      setMessages(prev => insertDateHeaders([...prev, formatMessage(newMsg)]));
-      scrollToBottom();
-
-      sendMessage(newMsg, res => {
-        if (res?.success && res.messageId) {
-          setMessages(prev =>
-            insertDateHeaders(
-              prev.map(m =>
-                m._id === tempId ? {...m, _id: res.messageId} : m,
-              ),
-            ),
-          );
-        }
-      });
-    }
-    setMessage('');
-  }, [
-    message,
-    selectedImage,
-    editingMessageId,
-    chatType,
-    groupId,
-    RECEIVER_ID,
-  ]);
-
   const handleDelete = useCallback(item => {
     if (item.from === 'me') {
       deleteMessage(item._id);
@@ -362,13 +286,6 @@ const requestStoragePermission = async () => {
     item => {
       if (item.from === 'me') {
         Alert.alert('Message Options', '', [
-          {
-            text: 'Edit',
-            onPress: () => {
-              setEditingMessageId(item._id);
-              setMessage(item.content);
-            },
-          },
           {
             text: 'Delete',
             style: 'destructive',
@@ -394,9 +311,43 @@ const requestStoragePermission = async () => {
     });
   }, [messages]);
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchChatHistory();
+    }, [chatType, groupId, RECEIVER_ID]),
+  );
+
+  useEffect(() => {
+    const {off} = subscribeToDeletedMessages(messageId => {
+      setMessages(prev => {
+        const updated = prev.map(msg => {
+          if (msg._id.toString() === messageId.toString()) {
+            return {...msg, deleted: true};
+          }
+          return msg;
+        });
+        return updated;
+      });
+    });
+
+    return off;
+  }, []);
+  const onViewableItemsChanged = useRef(({viewableItems}) => {
+    viewableItems.forEach(item => {
+      if (item.item.from === 'them' && !item.item.read) {
+        markAsRead(item.item._id);
+        setMessages(prev =>
+          insertDateHeaders(
+            prev.map(m => (m._id === item.item._id ? {...m, read: true} : m)),
+          ),
+        );
+      }
+    });
+  }).current;
+
   useEffect(() => {
     fetchChatHistory();
-    let msgSub, readSub;
+    let msgSub, readSub, deleteSub;
 
     if (chatType === 'private') {
       msgSub = subscribeToPrivateMessages(newMsg => {
@@ -407,7 +358,6 @@ const requestStoragePermission = async () => {
           scrollToBottom();
         }
       });
-
       readSub = subscribeToReadStatus(({messageId}) => {
         setMessages(prev =>
           insertDateHeaders(
@@ -425,10 +375,10 @@ const requestStoragePermission = async () => {
         }
       });
     }
-
     return () => {
       msgSub?.off?.('message');
       readSub?.off?.('messageRead');
+      deleteSub?.off?.('messageDeleted');
     };
   }, [chatType, groupId, RECEIVER_ID, fetchChatHistory]);
 
@@ -443,6 +393,10 @@ const requestStoragePermission = async () => {
           <Text style={styles.dateHeaderText}>{item.dateHeader}</Text>
         </View>
       );
+    }
+
+    if (item.deleted) {
+      return <></>;
     }
 
     const hasImage =
@@ -479,30 +433,16 @@ const requestStoragePermission = async () => {
       </TouchableOpacity>
     );
   };
-  const defaultAvatar = require('../../../assets/image/avatar.png');
-  const groupAvatar =
-    fullGroup?.groupIcone &&
-    typeof fullGroup.groupIcone === 'string' &&
-    fullGroup.groupIcone.startsWith('http')
-      ? fullGroup.groupIcone
-      : defaultAvatar;
-
-  const fallbackUserAvatar =
-    user?.avatar &&
-    typeof user.avatar === 'string' &&
-    user.avatar.startsWith('http')
-      ? user.avatar
-      : fullGroup?.createdBy?.avatar &&
-        typeof fullGroup.createdBy.avatar === 'string' &&
-        fullGroup.createdBy.avatar.startsWith('http')
-      ? fullGroup.createdBy.avatar
-      : defaultAvatar;
 
   return (
     <ScreenWrapper>
       <ChatHeader
         userName={chatType === 'group' ? fullGroup?.name : user?.fullName}
-        avatar={chatType === 'group' ? groupAvatar : fallbackUserAvatar}
+        avatar={
+          chatType === 'group'
+            ? fullGroup?.groupIcone
+            : user?.avatar || fullGroup?.createdBy?.avatar
+        }
         menu={chatType === 'group'}
         onMenuPress={() => {
           if (chatType === 'group') {
@@ -513,7 +453,6 @@ const requestStoragePermission = async () => {
           }
         }}
       />
-
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -523,31 +462,37 @@ const requestStoragePermission = async () => {
           keyExtractor={item => item._id}
           renderItem={renderItem}
           contentContainerStyle={styles.messagesContainer}
-          onContentSizeChange={scrollToBottom}
           showsVerticalScrollIndicator={false}
+          onContentSizeChange={scrollToBottom}
+          onLayout={scrollToBottom}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={{itemVisiblePercentThreshold: 50}}
         />
-        {selectedImage && (
-          <View style={styles.imagePreviewContainer}>
-            <Image
-              source={{uri: selectedImage.uri}}
-              style={styles.previewImage}
-              resizeMode="cover"
-            />
-            <Text
-              numberOfLines={1}
-              style={{
-                color: Color?.black,
-                width: '75%',
-              }}>
-              {selectedImage?.fileName}
-            </Text>
-            <TouchableOpacity
-              onPress={() => setSelectedImage(null)}
-              style={styles.removeImageButton}>
-              <Text style={styles.removeImageText}>✕</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+
+        <View>
+          {selectedImage && (
+            <View style={styles.imagePreviewContainer}>
+              <Image
+                source={{uri: selectedImage.uri}}
+                style={styles.previewImage}
+                resizeMode="cover"
+              />
+              <Text
+                numberOfLines={1}
+                style={{
+                  color: Color?.black,
+                  width: '75%',
+                }}>
+                {selectedImage?.fileName}
+              </Text>
+              <TouchableOpacity
+                onPress={() => setSelectedImage(null)}
+                style={styles.removeImageButton}>
+                <Text style={styles.removeImageText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
         <View style={styles.inputContainer}>
           <TouchableOpacity
             onPress={handleMediaPick}
@@ -558,15 +503,11 @@ const requestStoragePermission = async () => {
             style={styles.input}
             value={message}
             onChangeText={setMessage}
-            placeholder={
-              editingMessageId ? 'Edit message...' : 'Type a message...'
-            }
+            placeholder="Type a message..."
             placeholderTextColor="#aaa"
           />
           <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
-            <Text style={styles.sendText}>
-              {editingMessageId ? 'Update' : 'Send'}
-            </Text>
+            <Text style={styles.sendText}>Send</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -615,7 +556,7 @@ const styles = StyleSheet.create({
   },
   readStatus: {
     fontSize: 10,
-    color: '#4caf50',
+    color: Color?.white,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -649,12 +590,17 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   dateHeaderContainer: {
-    alignItems: 'center',
+    alignSelf: 'center',
     marginVertical: 10,
+    backgroundColor: 'gray',
+    paddingVertical: scale(8),
+    paddingHorizontal: scale(12),
+    borderRadius: scale(5),
   },
   dateHeaderText: {
-    color: '#ccc',
-    fontSize: 12,
+    color: Color?.white,
+    fontSize: scale(12),
+    fontWeight: '600',
   },
   imagePreviewContainer: {
     flexDirection: 'row',

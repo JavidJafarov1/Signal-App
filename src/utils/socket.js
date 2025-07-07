@@ -17,6 +17,12 @@ export const initiateSocket = userId => {
   });
 };
 
+export const subscribeToChatList = callback => {
+  if (!socket) return;
+
+  socket.on('chatList', callback);
+};
+
 const authenticate = userId => {
   socket?.emit('authenticate', userId, res => {
     console.log(
@@ -24,7 +30,6 @@ const authenticate = userId => {
     );
   });
 };
-
 
 export const uploadFile = async (file, token) => {
   try {
@@ -88,7 +93,6 @@ export const sendMessage = (payload, callback) => {
     },
     res => {
       callback?.(res);
-      console.log('res', res);
     },
   );
 };
@@ -101,8 +105,11 @@ export const deleteMessage = messageId => {
   socket?.emit('deleteMessage', {messageId});
 };
 
-export const editMessage = ({messageId, content}) => {
-  socket?.emit('editMessage', {messageId, content});
+export const subscribeToDeletedMessages = callback => {
+  socket?.on('messageDeleted', callback);
+  return {
+    off: () => socket?.off('messageDeleted', callback),
+  };
 };
 
 export const subscribeToPrivateMessages = callback => {
@@ -114,7 +121,27 @@ export const subscribeToGroupMessages = callback => {
 };
 
 export const subscribeToReadStatus = callback => {
-  socket?.on('messageRead', callback);
+  const onPrivate = data => {
+    if (__DEV__) console.log('🟢 Received messageRead:', data);
+    callback(data);
+  };
+
+  const onGroup = data => {
+    if (__DEV__) console.log('🟢 Received groupMessageRead:', data);
+    callback(data);
+  };
+
+  if (!socket) return {off: () => {}};
+
+  socket.on('messageRead', onPrivate);
+  socket.on('groupMessageRead', onGroup);
+
+  return {
+    off: () => {
+      socket.off('messageRead', onPrivate);
+      socket.off('groupMessageRead', onGroup);
+    },
+  };
 };
 
 export const disconnectSocket = () => {
