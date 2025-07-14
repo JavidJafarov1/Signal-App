@@ -20,14 +20,15 @@ const EmailConfirmationScreen = () => {
   const [email, setEmail] = useState('@gmail.com');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
   const handleGoogleLogin = async () => {
     try {
       await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-      console.log('userInfo', userInfo);
 
-      const idToken = userInfo?.data?.idToken;
+      await GoogleSignin.signOut();
+
+      const userInfo = await GoogleSignin.signIn();
+
+      const idToken = userInfo?.idToken || userInfo?.data?.idToken;
       if (!idToken) {
         Alert.alert('Error', 'Unable to retrieve ID token from Google');
         return;
@@ -37,7 +38,6 @@ const EmailConfirmationScreen = () => {
       console.log('loginResponse', loginResponse);
 
       if (loginResponse) {
-        // Alert.alert('Success', `Welcome ${loginResponse.user}`);
         dispatch(setuserDetails(loginResponse));
       } else {
         Alert.alert(
@@ -45,8 +45,6 @@ const EmailConfirmationScreen = () => {
           `Welcome ${userInfo?.user?.givenName || 'User'}`,
         );
       }
-
-      console.log('Google login response:', loginResponse);
     } catch (error) {
       console.error('Google Sign-In error:', error);
       Alert.alert('Error', error.message || 'Google Sign-In failed');

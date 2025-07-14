@@ -10,6 +10,7 @@ import {
   Platform,
   Alert,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import {
   sendMessage,
@@ -36,19 +37,15 @@ export default function ChatScreen({route}) {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [uploadingMessageId, setUploadingMessageId] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [initialScrollDone, setInitialScrollDone] = useState(false);
 
   const flatListRef = useRef(null);
   const {navigation} = useAppHooks();
   const token = useAuthToken();
-  const [isUploading, setIsUploading] = useState(false);
 
   const {user, senderId, chatType, groupId, fullGroup} = route.params || {};
   const RECEIVER_ID = user?._id;
-
-  const scrollToBottom = (animated = false) => {
-    setTimeout(() => flatListRef.current?.scrollToEnd({animated}), 0);
-  };
 
   const formatMessage = msg => {
     const date = new Date(msg.timestamp || msg.createdAt);
@@ -143,27 +140,34 @@ export default function ChatScreen({route}) {
           : {userId: RECEIVER_ID, token, type: 'private'};
 
       const res = await ChatHistory(params);
+
       if (res?.messages) {
-        // console.log('Fetched chat history:', res.messages.length, 'messages');
         const formatted = res.messages.map(formatMessage);
         setMessages(prev => {
           const existingIds = new Set(prev.map(m => m._id));
           const newMessages = formatted.filter(
             msg => !existingIds.has(msg._id),
           );
-          return insertDateHeaders([
+          const finalMessages = insertDateHeaders([
             ...prev.filter(m => m.type !== 'date-header'),
             ...newMessages,
           ]);
+
+          return finalMessages;
         });
-        scrollToBottom();
+        if (!initialScrollDone) {
+          setTimeout(() => {
+            flatListRef.current?.scrollToEnd({animated: false});
+            setInitialScrollDone(true);
+          }, 100);
+        }
       } else {
         console.log('No messages found in chat history');
       }
     } catch (err) {
       console.error('Fetch chat history failed:', err);
     }
-  }, [chatType, groupId, RECEIVER_ID, token]);
+  }, [chatType, groupId, RECEIVER_ID, token, initialScrollDone]);
 
   const handleSend = useCallback(() => {
     const trimmed = message.trim();
@@ -183,9 +187,6 @@ export default function ChatScreen({route}) {
       type: 'text',
       ...(chatType === 'group' ? {groupId} : {receiverId: RECEIVER_ID}),
     };
-
-    console.log('Sending text message:', newMsg);
-    scrollToBottom(true);
     sendMessage(newMsg, res => {
       if (!res?.success) {
         console.error('Send message failed:', res);
@@ -196,6 +197,7 @@ export default function ChatScreen({route}) {
     });
 
     setMessage('');
+    fetchChatHistory();
   }, [message, selectedImage, chatType, groupId, RECEIVER_ID, senderId]);
 
   const handleMediaPick = () => {
@@ -207,7 +209,10 @@ export default function ChatScreen({route}) {
       }
     });
   };
+
   const sendMediaMessage = async (asset, caption) => {
+    setIsUploading(true);
+
     const tempId = `temp-${Date.now()}`;
     const localUri = asset.uri;
 
@@ -229,7 +234,6 @@ export default function ChatScreen({route}) {
       ...(chatType === 'group' ? {groupId} : {receiverId: RECEIVER_ID}),
     };
 
-    scrollToBottom();
     setIsUploading(true);
 
     try {
@@ -270,8 +274,8 @@ export default function ChatScreen({route}) {
     } finally {
       setIsUploading(false);
     }
+    fetchChatHistory();
   };
-
   const handleDelete = useCallback(item => {
     if (item.from === 'me') {
       console.log('Deleting message:', item._id);
@@ -316,27 +320,20 @@ export default function ChatScreen({route}) {
   useEffect(() => {
     fetchChatHistory();
     markUnreadMessages();
-    scrollToBottom(false);
-  }, [fetchChatHistory, markUnreadMessages]);
+  }, [fetchChatHistory]);
 
   useEffect(() => {
     let msgSub, readSub, deleteSub;
-
     const updateMessage = newMsg => {
       console.log('Received socket message:', newMsg);
-
       setMessages(prev => {
         const formatted = formatMessage(newMsg);
-
         const withoutTemp = prev.filter(
           m =>
             m._id !== newMsg._id &&
             !(m._id.startsWith('temp-') && m.timestamp === newMsg.timestamp),
         );
-
         const updated = insertDateHeaders([...withoutTemp, formatted]);
-        scrollToBottom();
-
         if (newMsg.sender !== senderId && !newMsg.read) {
           console.log('Marking new message as read:', newMsg._id);
           markAsRead(newMsg._id);
@@ -432,17 +429,15 @@ export default function ChatScreen({route}) {
             item.from === 'me' ? styles.myMessage : styles.theirMessage,
           ]}>
           {hasImage && (
-            <Image
-              source={{uri: item.media.uri}}
-              style={styles.image}
-              resizeMode="cover"
-            />
+            <View style={styles.imageWrapper}>
+              <Image
+                source={{uri: item.media.uri}}
+                style={styles.image}
+                resizeMode="cover"
+              />
+            </View>
           )}
-          {hasImage &&
-            item.from === 'me' &&
-            uploadingMessageId === item._id && (
-              <ActivityIndicator style={styles.loadingOverlay} />
-            )}
+
           {!!item.content?.trim() && (
             <Text style={styles.messageText}>{item.content.trim()}</Text>
           )}
@@ -484,13 +479,15 @@ export default function ChatScreen({route}) {
           data={messages}
           keyExtractor={item => item._id}
           renderItem={renderItem}
-          contentContainerStyle={styles.messagesContainer}
+          contentContainerStyle={{flexGrow: 1, padding: 10}}
           showsVerticalScrollIndicator={false}
           onViewableItemsChanged={onViewableItemsChanged}
-          viewabilityConfig={{
-            itemVisiblePercentThreshold: 50,
+          viewabilityConfig={{itemVisiblePercentThreshold: 50}}
+          onContentSizeChange={() => {
+            flatListRef.current?.scrollToEnd({animated: true});
           }}
         />
+
         {selectedImage && (
           <View style={styles.imagePreviewContainer}>
             <Image
@@ -522,14 +519,18 @@ export default function ChatScreen({route}) {
             placeholderTextColor="#aaa"
           />
           <TouchableOpacity onPress={handleSend} style={styles.sendButton}>
-            <Text style={styles.sendText}>Send</Text>
+            <Text style={styles.sendText}>{isUploading ? '' : 'Send'}</Text>
           </TouchableOpacity>
+          {isUploading && (
+            <View style={styles.uploadLoader}>
+              <ActivityIndicator size="small" color="#fff" />
+            </View>
+          )}
         </View>
       </KeyboardAvoidingView>
     </ScreenWrapper>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
