@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {View, Text, Alert, ScrollView} from 'react-native';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import {Color} from '../../assets/color/Color';
@@ -7,21 +7,61 @@ import ButtonComponent from '../../components/ButtonComponent';
 import TextComponent from '../../components/TextComponent';
 import useAppHooks from '../../auth/useAppHooks';
 import {scale, verticalScale} from 'react-native-size-matters';
-import {CheckUserExistOrNot} from '../../utils/Apis/AuthApi';
+import {CheckUserExistOrNot, GoogleLogin} from '../../utils/Apis/AuthApi';
 import CustomTextInput from '../../components/Input';
 import {validateEmail} from '../../utils/helpers';
 import LoadingOverlay from '../../components/Loader';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import {setuserDetails} from '../../store/reducer/authReducer';
 
 const EmailConfirmationScreen = () => {
-  const {navigation, t} = useAppHooks();
+  const {navigation, t, dispatch} = useAppHooks();
 
   const [email, setEmail] = useState('@gmail.com');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleGoogleLogin = async () => {
-    console.log('----');
+    try {
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      console.log('userInfo', userInfo);
+
+      const idToken = userInfo?.data?.idToken;
+      if (!idToken) {
+        Alert.alert('Error', 'Unable to retrieve ID token from Google');
+        return;
+      }
+
+      const loginResponse = await GoogleLogin(idToken);
+      console.log('loginResponse', loginResponse);
+
+      if (loginResponse) {
+        // Alert.alert('Success', `Welcome ${loginResponse.user}`);
+        dispatch(setuserDetails(loginResponse));
+      } else {
+        Alert.alert(
+          'Success',
+          `Welcome ${userInfo?.user?.givenName || 'User'}`,
+        );
+      }
+
+      console.log('Google login response:', loginResponse);
+    } catch (error) {
+      console.error('Google Sign-In error:', error);
+      Alert.alert('Error', error.message || 'Google Sign-In failed');
+    }
   };
+
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId:
+        '199366399433-mtariv1nljlu5groe3mjeq1b1ig6tktl.apps.googleusercontent.com',
+      iosClientId:
+        '199366399433-d2uotcqaljrdhv8f028kmg9nad1d93l0.apps.googleusercontent.com',
+      offlineAccess: true,
+    });
+  }, []);
 
   const handleEmailConfiguration = async () => {
     if (!email) {

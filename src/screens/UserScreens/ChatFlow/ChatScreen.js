@@ -35,18 +35,19 @@ import {useFocusEffect} from '@react-navigation/native';
 export default function ChatScreen({route}) {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [uploadingMessageId, setUploadingMessageId] = useState(null);
+
   const flatListRef = useRef(null);
   const {navigation} = useAppHooks();
-  const [selectedImage, setSelectedImage] = useState(null);
-
   const token = useAuthToken();
+  const [isUploading, setIsUploading] = useState(false);
+
   const {user, senderId, chatType, groupId, fullGroup} = route.params || {};
   const RECEIVER_ID = user?._id;
 
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      flatListRef.current?.scrollToEnd({animated: true});
-    }, 100);
+  const scrollToBottom = (animated = false) => {
+    setTimeout(() => flatListRef.current?.scrollToEnd({animated}), 0);
   };
 
   const formatMessage = msg => {
@@ -98,24 +99,39 @@ export default function ChatScreen({route}) {
     };
   };
 
+  const onViewableItemsChanged = useRef(({viewableItems}) => {
+    viewableItems.forEach(item => {
+      if (item.item.from === 'them' && !item.item.read && !item.item.deleted) {
+        console.log(`Marking message as read: ${item.item._id}`);
+        markAsRead(item.item._id);
+        setMessages(prev =>
+          insertDateHeaders(
+            prev.map(m => (m._id === item.item._id ? {...m, read: true} : m)),
+          ),
+        );
+      }
+    });
+  }).current;
+
   const insertDateHeaders = msgs => {
     const sorted = [...msgs.filter(m => m.type !== 'date-header')].sort(
       (a, b) => new Date(a.timestamp) - new Date(b.timestamp),
     );
     const result = [];
     let lastDate = null;
+    let counter = 0;
 
-    sorted.forEach(msg => {
+    for (const msg of sorted) {
       if (msg.dateHeader !== lastDate) {
         result.push({
-          _id: `date-${msg.dateHeader}`,
+          _id: `date-header-${msg.dateHeader}-${counter++}`,
           type: 'date-header',
           dateHeader: msg.dateHeader,
         });
         lastDate = msg.dateHeader;
       }
       result.push(msg);
-    });
+    }
     return result;
   };
 
@@ -128,9 +144,21 @@ export default function ChatScreen({route}) {
 
       const res = await ChatHistory(params);
       if (res?.messages) {
+        // console.log('Fetched chat history:', res.messages.length, 'messages');
         const formatted = res.messages.map(formatMessage);
-        setMessages(insertDateHeaders(formatted));
+        setMessages(prev => {
+          const existingIds = new Set(prev.map(m => m._id));
+          const newMessages = formatted.filter(
+            msg => !existingIds.has(msg._id),
+          );
+          return insertDateHeaders([
+            ...prev.filter(m => m.type !== 'date-header'),
+            ...newMessages,
+          ]);
+        });
         scrollToBottom();
+      } else {
+        console.log('No messages found in chat history');
       }
     } catch (err) {
       console.error('Fetch chat history failed:', err);
@@ -148,33 +176,22 @@ export default function ChatScreen({route}) {
       return;
     }
 
-    const tempId = Date.now().toString();
     const newMsg = {
-      _id: tempId,
       chatType,
       content: trimmed,
       sender: senderId,
-      from: 'me',
-      read: false,
-      timestamp: new Date().toISOString(),
       type: 'text',
       ...(chatType === 'group' ? {groupId} : {receiverId: RECEIVER_ID}),
     };
 
-    setMessages(prev => insertDateHeaders([...prev, formatMessage(newMsg)]));
-    scrollToBottom();
-
+    console.log('Sending text message:', newMsg);
+    scrollToBottom(true);
     sendMessage(newMsg, res => {
-      if (res?.success && res.messageId) {
-        setMessages(prev =>
-          insertDateHeaders(
-            prev.map(m =>
-              m._id === tempId
-                ? {...m, _id: res.messageId, sender: senderId}
-                : m,
-            ),
-          ),
-        );
+      if (!res?.success) {
+        console.error('Send message failed:', res);
+        Alert.alert('Error', 'Failed to send message');
+      } else {
+        console.log('Text message sent successfully:', res);
       }
     });
 
@@ -190,9 +207,8 @@ export default function ChatScreen({route}) {
       }
     });
   };
-
   const sendMediaMessage = async (asset, caption) => {
-    const tempId = Date.now().toString();
+    const tempId = `temp-${Date.now()}`;
     const localUri = asset.uri;
 
     const tempMsg = {
@@ -213,8 +229,8 @@ export default function ChatScreen({route}) {
       ...(chatType === 'group' ? {groupId} : {receiverId: RECEIVER_ID}),
     };
 
-    setMessages(prev => insertDateHeaders([...prev, formatMessage(tempMsg)]));
     scrollToBottom();
+    setIsUploading(true);
 
     try {
       const file = {
@@ -227,54 +243,38 @@ export default function ChatScreen({route}) {
 
       const finalMsg = {
         ...tempMsg,
-        _id: tempId,
         fileUrl: uploaded.fileUrl,
         fileName: uploaded.fileName,
         fileType: uploaded.fileType,
-        messageType: 'image',
         media: {
           name: uploaded.name,
           type: uploaded.fileType,
           uri: uploaded.fileUrl,
         },
-        sender: senderId,
-        receiver: chatType === 'group' ? null : RECEIVER_ID,
-        groupId: chatType === 'group' ? groupId : null,
       };
 
-      setMessages(prev =>
-        insertDateHeaders(
-          prev.map(m => (m._id === tempId ? formatMessage(finalMsg) : m)),
-        ),
-      );
-
       sendMessage(finalMsg, res => {
-        if (res?.success && res.messageId) {
+        if (!res?.success) {
           setMessages(prev =>
-            insertDateHeaders(
-              prev.map(m =>
-                m._id === tempId
-                  ? {
-                      ...formatMessage(finalMsg),
-                      _id: res.messageId,
-                      sender: senderId,
-                    }
-                  : m,
-              ),
-            ),
+            insertDateHeaders(prev.filter(m => m._id !== tempId)),
           );
+          Alert.alert('Error', 'Failed to send media message');
         }
       });
     } catch (err) {
       console.error('Upload/send error:', err);
-      Alert.alert('Error', 'Failed to send media message');
       setMessages(prev =>
         insertDateHeaders(prev.filter(m => m._id !== tempId)),
       );
+      Alert.alert('Error', 'Failed to send media message');
+    } finally {
+      setIsUploading(false);
     }
   };
+
   const handleDelete = useCallback(item => {
     if (item.from === 'me') {
+      console.log('Deleting message:', item._id);
       deleteMessage(item._id);
       setMessages(prev =>
         insertDateHeaders(prev.filter(m => m._id !== item._id)),
@@ -299,92 +299,117 @@ export default function ChatScreen({route}) {
   );
 
   const markUnreadMessages = useCallback(() => {
-    messages.forEach(msg => {
-      if (msg.from === 'them' && !msg.read) {
-        markAsRead(msg._id);
-        setMessages(prev =>
-          insertDateHeaders(
-            prev.map(m => (m._id === msg._id ? {...m, read: true} : m)),
-          ),
-        );
-      }
+    const unread = messages.filter(
+      m => m.from === 'them' && !m.read && !m.deleted,
+    );
+    unread.forEach(msg => {
+      console.log('Marking unread message as read:', msg._id);
+      markAsRead(msg._id);
+      setMessages(prev =>
+        insertDateHeaders(
+          prev.map(m => (m._id === msg._id ? {...m, read: true} : m)),
+        ),
+      );
     });
   }, [messages]);
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchChatHistory();
-    }, [chatType, groupId, RECEIVER_ID]),
-  );
-
-  useEffect(() => {
-    const {off} = subscribeToDeletedMessages(messageId => {
-      setMessages(prev => {
-        const updated = prev.map(msg => {
-          if (msg._id.toString() === messageId.toString()) {
-            return {...msg, deleted: true};
-          }
-          return msg;
-        });
-        return updated;
-      });
-    });
-
-    return off;
-  }, []);
-  const onViewableItemsChanged = useRef(({viewableItems}) => {
-    viewableItems.forEach(item => {
-      if (item.item.from === 'them' && !item.item.read) {
-        markAsRead(item.item._id);
-        setMessages(prev =>
-          insertDateHeaders(
-            prev.map(m => (m._id === item.item._id ? {...m, read: true} : m)),
-          ),
-        );
-      }
-    });
-  }).current;
-
   useEffect(() => {
     fetchChatHistory();
+    markUnreadMessages();
+    scrollToBottom(false);
+  }, [fetchChatHistory, markUnreadMessages]);
+
+  useEffect(() => {
     let msgSub, readSub, deleteSub;
 
-    if (chatType === 'private') {
-      msgSub = subscribeToPrivateMessages(newMsg => {
-        if ([newMsg.receiverId, newMsg.sender].includes(RECEIVER_ID)) {
-          setMessages(prev =>
-            insertDateHeaders([...prev, formatMessage(newMsg)]),
+    const updateMessage = newMsg => {
+      console.log('Received socket message:', newMsg);
+
+      setMessages(prev => {
+        const formatted = formatMessage(newMsg);
+
+        const withoutTemp = prev.filter(
+          m =>
+            m._id !== newMsg._id &&
+            !(m._id.startsWith('temp-') && m.timestamp === newMsg.timestamp),
+        );
+
+        const updated = insertDateHeaders([...withoutTemp, formatted]);
+        scrollToBottom();
+
+        if (newMsg.sender !== senderId && !newMsg.read) {
+          console.log('Marking new message as read:', newMsg._id);
+          markAsRead(newMsg._id);
+          return insertDateHeaders(
+            updated.map(m => (m._id === newMsg._id ? {...m, read: true} : m)),
           );
-          scrollToBottom();
+        }
+
+        return updated;
+      });
+    };
+
+    const handleReadStatus = ({messageId}) => {
+      console.log('Received read status for message:', messageId);
+      setMessages(prev => {
+        const exists = prev.find(
+          m => m._id.toString() === messageId.toString(),
+        );
+        if (exists) {
+          console.log('Updating read status for message:', messageId);
+          return insertDateHeaders(
+            prev.map(m =>
+              m._id.toString() === messageId.toString()
+                ? {...m, read: true}
+                : m,
+            ),
+          );
+        } else {
+          console.log('Message not found for read status:', messageId);
+          return prev;
         }
       });
-      readSub = subscribeToReadStatus(({messageId}) => {
-        setMessages(prev =>
-          insertDateHeaders(
-            prev.map(m => (m._id === messageId ? {...m, read: true} : m)),
-          ),
-        );
-      });
+    };
+
+    if (chatType === 'private') {
+      console.log('Subscribing to private messages');
+      msgSub = subscribeToPrivateMessages(updateMessage);
+      readSub = subscribeToReadStatus(handleReadStatus);
     } else {
+      console.log('Subscribing to group messages');
       msgSub = subscribeToGroupMessages(newMsg => {
         if (newMsg.groupId === groupId) {
-          setMessages(prev =>
-            insertDateHeaders([...prev, formatMessage(newMsg)]),
+          updateMessage(newMsg);
+        } else {
+          console.log(
+            'Ignoring group message for different group:',
+            newMsg.groupId,
           );
-          scrollToBottom();
         }
       });
+      readSub = subscribeToReadStatus(handleReadStatus);
     }
+
+    deleteSub = subscribeToDeletedMessages(messageId => {
+      console.log('Received delete event for message:', messageId);
+      setMessages(prev =>
+        insertDateHeaders(
+          prev.map(m =>
+            m._id.toString() === messageId.toString()
+              ? {...m, deleted: true}
+              : m,
+          ),
+        ),
+      );
+    });
+
     return () => {
+      console.log('Cleaning up socket subscriptions');
       msgSub?.off?.('message');
       readSub?.off?.('messageRead');
       deleteSub?.off?.('messageDeleted');
     };
-  }, [chatType, groupId, RECEIVER_ID, fetchChatHistory]);
-
-  useEffect(() => {
-    markUnreadMessages();
-  }, [markUnreadMessages]);
+  }, [chatType, groupId, RECEIVER_ID, senderId]);
 
   const renderItem = ({item}) => {
     if (item.type === 'date-header') {
@@ -395,16 +420,9 @@ export default function ChatScreen({route}) {
       );
     }
 
-    if (item.deleted) {
-      return <></>;
-    }
+    if (item.deleted) return null;
 
-    const hasImage =
-      item.media &&
-      typeof item.media.type === 'string' &&
-      item.media.type.startsWith('image/') &&
-      typeof item.media.uri === 'string' &&
-      item.media.uri.length > 0;
+    const hasImage = item.media?.type?.startsWith('image/') && item.media?.uri;
 
     return (
       <TouchableOpacity onLongPress={() => showOptions(item)}>
@@ -420,7 +438,12 @@ export default function ChatScreen({route}) {
               resizeMode="cover"
             />
           )}
-          {item.content && item.content.trim().length > 0 && (
+          {hasImage &&
+            item.from === 'me' &&
+            uploadingMessageId === item._id && (
+              <ActivityIndicator style={styles.loadingOverlay} />
+            )}
+          {!!item.content?.trim() && (
             <Text style={styles.messageText}>{item.content.trim()}</Text>
           )}
           <View style={styles.metaContainer}>
@@ -463,36 +486,28 @@ export default function ChatScreen({route}) {
           renderItem={renderItem}
           contentContainerStyle={styles.messagesContainer}
           showsVerticalScrollIndicator={false}
-          onContentSizeChange={scrollToBottom}
-          onLayout={scrollToBottom}
           onViewableItemsChanged={onViewableItemsChanged}
-          viewabilityConfig={{itemVisiblePercentThreshold: 50}}
+          viewabilityConfig={{
+            itemVisiblePercentThreshold: 50,
+          }}
         />
-
-        <View>
-          {selectedImage && (
-            <View style={styles.imagePreviewContainer}>
-              <Image
-                source={{uri: selectedImage.uri}}
-                style={styles.previewImage}
-                resizeMode="cover"
-              />
-              <Text
-                numberOfLines={1}
-                style={{
-                  color: Color?.black,
-                  width: '75%',
-                }}>
-                {selectedImage?.fileName}
-              </Text>
-              <TouchableOpacity
-                onPress={() => setSelectedImage(null)}
-                style={styles.removeImageButton}>
-                <Text style={styles.removeImageText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
+        {selectedImage && (
+          <View style={styles.imagePreviewContainer}>
+            <Image
+              source={{uri: selectedImage.uri}}
+              style={styles.previewImage}
+              resizeMode="cover"
+            />
+            <Text numberOfLines={1} style={styles.previewFilename}>
+              {selectedImage.fileName}
+            </Text>
+            <TouchableOpacity
+              style={styles.removeImageButton}
+              onPress={() => setSelectedImage(null)}>
+              <Text style={styles.removeImageText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+        )}
         <View style={styles.inputContainer}>
           <TouchableOpacity
             onPress={handleMediaPick}
@@ -506,7 +521,7 @@ export default function ChatScreen({route}) {
             placeholder="Type a message..."
             placeholderTextColor="#aaa"
           />
-          <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+          <TouchableOpacity onPress={handleSend} style={styles.sendButton}>
             <Text style={styles.sendText}>Send</Text>
           </TouchableOpacity>
         </View>

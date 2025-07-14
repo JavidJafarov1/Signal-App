@@ -116,3 +116,20 @@ export const ResetPassword = async data => {
     throw error;
   }
 };
+
+export const GoogleLogin = async idToken => {
+  console.log('idToken-=-=-=-=-=', idToken);
+  try {
+    const url = `${BASE_URL}/api/auth/login/google`;
+    const body = {
+      idToken: idToken,
+    };
+    console.log('url,body', url, body);
+
+    const response = await axios.post(url, body);
+    console.log('response', response);
+    return response?.data;
+  } catch (error) {
+    throw error;
+  }
+};

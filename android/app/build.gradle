@@ -1,6 +1,7 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+apply plugin: 'com.google.gms.google-services' 
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -89,6 +90,14 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+         release {
+        if (project.hasProperty('MYAPP_RELEASE_STORE_FILE')) {
+            storeFile file(MYAPP_RELEASE_STORE_FILE)
+            storePassword MYAPP_RELEASE_STORE_PASSWORD
+            keyAlias MYAPP_RELEASE_KEY_ALIAS
+            keyPassword MYAPP_RELEASE_KEY_PASSWORD
+        }
+    }
     }
     buildTypes {
         debug {
@@ -101,6 +110,7 @@ android {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
+        
     }
 }
 
@@ -111,6 +121,7 @@ dependencies {
 implementation project(':react-native-vector-icons')
 implementation 'com.google.android.gms:play-services-maps:18.2.0'
 implementation 'com.google.android.gms:play-services-location:21.0.1'
+implementation 'com.google.android.gms:play-services-auth:20.7.0'
 
 
     if (hermesEnabled.toBoolean()) {

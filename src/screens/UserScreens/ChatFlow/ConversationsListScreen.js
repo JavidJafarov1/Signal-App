@@ -66,7 +66,6 @@ export default function ConversationsListScreen({route}) {
     };
   }, [SENDER.id]);
 
-
   useFocusEffect(
     useCallback(() => {
       if (token && !conversations.length) {
@@ -109,6 +108,7 @@ export default function ConversationsListScreen({route}) {
       const {privateChats = [], groupChats = []} = conversationResponse || {};
       const {groups = []} = groupResponse || {};
       dispatch(setGroupDetails(groups));
+
       const privateConvos = privateChats.map(chat => ({
         id: chat._id,
         type: 'private',
@@ -120,6 +120,9 @@ export default function ConversationsListScreen({route}) {
         lastMessage: chat?.lastMessage?.content
           ? chat?.lastMessage?.content
           : chat?.lastMessage?.messageType || 'Start Chating',
+        lastMessageTime: chat?.lastMessage?.createdAt
+          ? new Date(chat.lastMessage.createdAt)
+          : new Date(0), // Default to epoch for chats with no messages
         unreadCount: chat?.unreadCount || 0,
       }));
 
@@ -137,13 +140,24 @@ export default function ConversationsListScreen({route}) {
           lastMessage: groupChat?.lastMessage?.content
             ? groupChat?.lastMessage?.content
             : groupChat?.lastMessage?.messageType || 'Start Chating',
+          lastMessageTime: groupChat?.lastMessage?.createdAt
+            ? new Date(groupChat.lastMessage.createdAt)
+            : new Date(0), // Default to epoch for chats with no messages
           unreadCount: groupChat?.unreadCount || 0,
         };
       });
 
-      const allConversations = [...groupConvos, ...privateConvos];
+      // Combine and sort conversations by lastMessageTime (descending)
+      const allConversations = [...groupConvos, ...privateConvos].sort(
+        (a, b) => b.lastMessageTime - a.lastMessageTime,
+      );
+
       setConversations(allConversations);
-      setFilteredConversations(allConversations);
+      setFilteredConversations(
+        activeTab === 'group'
+          ? allConversations.filter(convo => convo.type === 'group')
+          : allConversations,
+      );
       setGroupData(groupConvos);
     } catch (err) {
       console.error('Conversation fetch error:', err);
@@ -200,13 +214,15 @@ export default function ConversationsListScreen({route}) {
   const handleSearch = text => {
     setSearchQuery(text);
     const dataToSearch = activeTab === 'group' ? groupData : conversations;
-    const filtered = dataToSearch.filter(
-      convo =>
-        convo.participant?.fullName
-          ?.toLowerCase()
-          .includes(text.toLowerCase()) ||
-        convo.participant?._id?.toLowerCase().includes(text.toLowerCase()),
-    );
+    const filtered = dataToSearch
+      .filter(
+        convo =>
+          convo.participant?.fullName
+            ?.toLowerCase()
+            .includes(text.toLowerCase()) ||
+          convo.participant?._id?.toLowerCase().includes(text.toLowerCase()),
+      )
+      .sort((a, b) => b.lastMessageTime - a.lastMessageTime); // Sort filtered results
     setFilteredConversations(filtered);
   };
 

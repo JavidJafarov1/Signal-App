@@ -12,7 +12,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import {AllArtist} from '../../utils/Apis/AllArtist';
 import {useSelector} from 'react-redux';
 import {useAuthToken} from '../../utils/api';
-import { useFocusEffect } from '@react-navigation/native';
+import {useFocusEffect} from '@react-navigation/native';
 
 const HomeScreen = () => {
   const {navigation, dispatch, t} = useAppHooks();
@@ -47,7 +47,7 @@ const HomeScreen = () => {
       setArtists(enrichedArtists);
       setArtistData(enrichedArtists);
     } catch (error) {
-      console.error('Error fetching artists:', error);
+      console.error('Error fetching artists:0*/*/**/', error);
     }
   };
   useFocusEffect(
@@ -118,8 +118,6 @@ const HomeScreen = () => {
           numColumns={2}
           contentContainerStyle={styles.list}
         />
-
-        
       </View>
     </ScreenWrapper>
   );

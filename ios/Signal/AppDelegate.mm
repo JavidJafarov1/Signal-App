@@ -12,7 +12,7 @@
   // You can add your custom initial props in the dictionary below.
   // They will be passed down to the ViewController used by React Native.
   self.initialProps = @{};
-[GMSServices provideAPIKey:@"YOUR_GOOGLE_MAPS_API_KEY_HERE"];
+[GMSServices provideAPIKey:@"AIzaSyBSm4rNMQ4J2GNd8E8pAKYqR5pgPcvrjFc"];
 
   return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }

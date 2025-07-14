@@ -5,7 +5,7 @@ import axios from 'axios';
 let socket;
 
 export const initiateSocket = userId => {
-  socket = io(BASE_URL.replace('/api', ''), {transports: ['websocket']});
+  socket = io(BASE_URL, {transports: ['websocket']});
 
   socket.on('connect', () => {
     console.log('✅ Socket connected');

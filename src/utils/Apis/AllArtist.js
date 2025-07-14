@@ -13,7 +13,7 @@ export const AllArtist = async token => {
 
     return response?.data;
   } catch (error) {
-    console.error('Error fetching artists:', error?.response?.data || error);
+    console.error('Error fetching artists:-=-==--=-', error?.response?.data || error);
     throw error;
   }
 };
@@ -34,7 +34,7 @@ export const LikeArt = async (id, token) => {
 
     return response?.data;
   } catch (error) {
-    console.error('Error fetching artists:', error?.response?.data || error);
+    console.error('Error fetching artists:-------', error?.response?.data || error);
     throw error;
   }
 };
@@ -51,7 +51,7 @@ export const GetAllLikeArt = async (id, token) => {
 
     return response?.data;
   } catch (error) {
-    console.error('Error fetching artists:', error?.response?.data || error);
+    console.error('Error fetching artists://*/**/*/*', error?.response?.data || error);
     throw error;
   }
 };
